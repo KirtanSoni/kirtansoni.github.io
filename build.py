@@ -40,7 +40,7 @@ DATA = os.path.join(ROOT, "data")
 
 SITE_TITLE = "Kirtan Soni"
 SITE_EMAIL = "1kirtansoni@gmail.com"
-SITE_URL = "https://kirtansoni.github.io"
+SITE_URL = "https://kirtansoni.com"
 RECENT_ON_HOME = 5
 
 
