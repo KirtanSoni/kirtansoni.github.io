@@ -42,6 +42,7 @@ SITE_TITLE = "Kirtan Soni"
 SITE_EMAIL = "1kirtansoni@gmail.com"
 SITE_URL = "https://kirtansoni.com"
 RECENT_ON_HOME = 5
+ANALYTICS_ID = ""   # GA4 measurement id ("G-XXXXXXXXXX"); empty = no analytics
 
 
 def load_data(name):
@@ -242,6 +243,54 @@ THEME_SNIPPET = ("<script>(function(){try{var t=localStorage.getItem('theme');"
                  "if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>")
 
 
+def analytics_snippet():
+    """GA4 tag, or empty string when ANALYTICS_ID is unset."""
+    if not ANALYTICS_ID:
+        return ""
+    return (f'<script async src="https://www.googletagmanager.com/gtag/js?id={ANALYTICS_ID}"></script>\n'
+            "  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
+            f"gtag('js',new Date());gtag('config','{ANALYTICS_ID}');</script>")
+
+
+def head_extras(path, title, desc, og_type="website", post_meta=None):
+    """Canonical + Open Graph + Twitter card + (for posts) JSON-LD + analytics."""
+    url = f"{SITE_URL}/{path}" if path else f"{SITE_URL}/"
+    t, d = html.escape(title), html.escape(desc)
+    lines = [
+        f'<link rel="canonical" href="{url}">',
+        f'<meta property="og:site_name" content="{SITE_TITLE}">',
+        f'<meta property="og:title" content="{t}">',
+        f'<meta property="og:description" content="{d}">',
+        f'<meta property="og:url" content="{url}">',
+        f'<meta property="og:type" content="{og_type}">',
+        '<meta name="twitter:card" content="summary">',
+        f'<meta name="author" content="{SITE_TITLE}">',
+    ]
+    if post_meta is not None:
+        iso = post_meta["_date_obj"].strftime("%Y-%m-%d")
+        lines.append(f'<meta property="article:published_time" content="{iso}">')
+        ld = {"@context": "https://schema.org", "@type": "BlogPosting",
+              "headline": title, "description": desc, "datePublished": iso,
+              "url": url, "author": {"@type": "Person", "name": SITE_TITLE, "url": SITE_URL}}
+        lines.append('<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + '</script>')
+    snippet = analytics_snippet()
+    if snippet:
+        lines.append(snippet)
+    return "\n  ".join(lines)
+
+
+def render_sitemap(posts):
+    today = datetime.date.today().isoformat()
+    pages = [("", today), ("writing.html", today), ("projects.html", today), ("tools.html", today)]
+    pages += [(f"posts/{p['slug']}.html", p["_date_obj"].strftime("%Y-%m-%d")) for p in posts]
+    items = "\n".join(
+        f"  <url><loc>{SITE_URL}/{path}</loc><lastmod>{d}</lastmod></url>"
+        for path, d in pages)
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"{items}\n</urlset>\n")
+
+
 def render_post(meta, body):
     title = unquote(meta.get("title", "Untitled"))
     desc = unquote(meta.get("description", ""))
@@ -265,6 +314,7 @@ def render_post(meta, body):
   <meta name="description" content="{html.escape(desc)}">
   <link rel="stylesheet" href="../style.css">
   <link rel="alternate" type="application/rss+xml" title="{SITE_TITLE} — Writing" href="../feed.xml">
+  {head_extras(f"posts/{meta['slug']}.html", title, desc, "article", meta)}
   {THEME_SNIPPET}
 </head>
 <body>
@@ -314,6 +364,7 @@ def render_writing(posts):
   <meta name="description" content="Blog posts and notes by {SITE_TITLE}.">
   <link rel="stylesheet" href="style.css">
   <link rel="alternate" type="application/rss+xml" title="{SITE_TITLE} — Writing" href="feed.xml">
+  {head_extras("writing.html", f"Writing — {SITE_TITLE}", f"Blog posts and notes by {SITE_TITLE}.")}
   {THEME_SNIPPET}
 </head>
 <body>
@@ -402,6 +453,7 @@ def render_directory_page(active, heading, intro, items_html):
   <meta name="description" content="{heading} by {SITE_TITLE}.">
   <link rel="stylesheet" href="style.css">
   <link rel="alternate" type="application/rss+xml" title="{SITE_TITLE} — Writing" href="feed.xml">
+  {head_extras(active + ".html", f"{heading} — {SITE_TITLE}", f"{heading} by {SITE_TITLE}.")}
   {THEME_SNIPPET}
 </head>
 <body>
@@ -462,6 +514,7 @@ def patch_index(posts, projects, tools):
         "POSTS": list_items(posts[:RECENT_ON_HOME]),
         "PROJECTS": "\n".join(project_item_home(p) for p in featured),
         "TOOLS": "\n".join(tool_item(t) for t in tools),
+        "ANALYTICS": analytics_snippet(),
     }
     for marker, snippet in sections.items():
         text = re.sub(
@@ -516,6 +569,8 @@ def main():
             "\n".join(tool_item(t) for t in tools)))
     with open(os.path.join(ROOT, "feed.xml"), "w", encoding="utf-8") as f:
         f.write(render_feed(posts))
+    with open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8") as f:
+        f.write(render_sitemap(posts))
     patch_index(posts, projects, tools)
 
     print(f"Built {len(posts)} post(s), {len(projects)} project(s), {len(tools)} tool(s):")
