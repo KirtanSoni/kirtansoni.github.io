@@ -243,6 +243,10 @@ THEME_SNIPPET = ("<script>(function(){try{var t=localStorage.getItem('theme');"
                  "if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>")
 
 
+ICON_LINKS = ('<link rel="icon" type="image/png" href="/assets/favicon.png">\n'
+              '  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">')
+
+
 def analytics_snippet():
     """GA4 tag, or empty string when ANALYTICS_ID is unset."""
     if not ANALYTICS_ID:
@@ -263,8 +267,11 @@ def head_extras(path, title, desc, og_type="website", post_meta=None):
         f'<meta property="og:description" content="{d}">',
         f'<meta property="og:url" content="{url}">',
         f'<meta property="og:type" content="{og_type}">',
+        f'<meta property="og:image" content="{SITE_URL}/assets/me.jpg">',
         '<meta name="twitter:card" content="summary">',
+        f'<meta name="twitter:image" content="{SITE_URL}/assets/me.jpg">',
         f'<meta name="author" content="{SITE_TITLE}">',
+        ICON_LINKS,
     ]
     if post_meta is not None:
         iso = post_meta["_date_obj"].strftime("%Y-%m-%d")
