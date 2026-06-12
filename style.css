@@ -1,6 +1,7 @@
 /* ---- Base ---- */
 :root {
   --ink: #1a1a1a;
+  --soft: #3a3a3a;   /* secondary body text (descriptions, quotes) */
   --muted: #6b6b6b;
   --rule: #e5e5e5;
   --link: #1a4fa0;
@@ -14,7 +15,8 @@
    preference when no explicit choice has been made. */
 :root[data-theme="dark"] {
   --ink: #e8e8e6;
-  --muted: #9a9a96;
+  --soft: #c9c9c4;
+  --muted: #a5a5a0;
   --rule: #2c2c2c;
   --link: #7fb0ff;
   --bg: #161615;
@@ -24,7 +26,8 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ink: #e8e8e6;
-    --muted: #9a9a96;
+    --soft: #c9c9c4;
+    --muted: #a5a5a0;
     --rule: #2c2c2c;
     --link: #7fb0ff;
     --bg: #161615;
@@ -140,7 +143,7 @@ h2.section {
 .list .title { font-weight: 600; color: var(--ink); }
 .list .title:hover { color: var(--link); }
 .list .meta { color: var(--muted); font-size: 14px; }
-.list .desc { margin: 2px 0 0; color: #333; }
+.list .desc { margin: 2px 0 0; color: var(--soft); }
 
 /* compact dated list (writing index) */
 .entries { list-style: none; padding: 0; margin: 0; }
@@ -189,7 +192,7 @@ article blockquote {
   border-left: 3px solid var(--rule);
   margin: 20px 0;
   padding: 4px 18px;
-  color: #444;
+  color: var(--soft);
 }
 article pre {
   background: var(--pre-bg);
