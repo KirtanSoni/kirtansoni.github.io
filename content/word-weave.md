@@ -1,6 +1,6 @@
 ---
 title: 13 words, 25 attempts, and a deadlock at 1 a.m.
-date: 2026-06-11
+date: 2026-02-22
 reading_time: 6 min read
 description: Word Weave — a word game where you steer a streaming GPT-3.5 completion toward a quote you're never allowed to type. Prototyped at 2:44 a.m., deadlocked the first time someone won, rewritten five weeks after its "final prod version" into a single Go binary.
 tags: [Go, React, LLM, Streaming, Game]

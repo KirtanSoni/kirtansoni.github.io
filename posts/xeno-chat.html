@@ -20,8 +20,8 @@
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <meta property="article:published_time" content="2026-06-11">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "The family jewelry ERP learned to chat in one night", "description": "Xeno Chat — built in one overnight session on May 12: a LangGraph agent over my family's retail SQL Server that answers plain-English questions, draws charts mid-conversation, shows its running cost in rupees, and grades its own answers every morning.", "datePublished": "2026-06-11", "url": "https://kirtansoni.com/posts/xeno-chat.html", "author": {"@type": "Person", "name": "Kirtan Soni", "url": "https://kirtansoni.com"}}</script>
+  <meta property="article:published_time" content="2026-05-24">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "The family jewelry ERP learned to chat in one night", "description": "Xeno Chat — built in one overnight session on May 12: a LangGraph agent over my family's retail SQL Server that answers plain-English questions, draws charts mid-conversation, shows its running cost in rupees, and grades its own answers every morning.", "datePublished": "2026-05-24", "url": "https://kirtansoni.com/posts/xeno-chat.html", "author": {"@type": "Person", "name": "Kirtan Soni", "url": "https://kirtansoni.com"}}</script>
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
@@ -42,7 +42,7 @@
 
   <article>
     <h1>The family jewelry ERP learned to chat in one night</h1>
-    <p class="post-meta">Jun 11, 2026 · 8 min read</p>
+    <p class="post-meta">May 24, 2026 · 8 min read</p>
 
 <p class="lede">My family's jewelry store runs on an old ERP backed by SQL Server. Every bill, every quotation, every tag of stock is in there — and getting any of it out means clicking through fixed reports or finding someone who writes T-SQL. One night in May I built the third option: a chat window. The first commit landed at 1:48am; by 3:55am the agent had a pipeline for grading its own conversations. Here's what got built that night, and what real use broke afterward.</p>
 <h2>Two fixed reports and a guy who knows T-SQL</h2>
@@ -293,7 +293,7 @@ anyone else touches it: four commits of hardening. The database password had bee
 <code>docker-compose.yml</code>; the connection pool had no limits; the frontend would happily
 start before the backend was listening. All fixed — env-driven config with fail-fast guards,
 pool limits, healthchecks with startup
-ordering.<span class="sn"><label class="sn-pill" for="sn-xeno-sa"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-sa"><span class="sn-note">Almost all fixed: a literal SA password survived in the setup script and docs until today. The last hardcoded credential left the repo the same day this writeup was published.</span></span>
+ordering.<span class="sn"><label class="sn-pill" for="sn-xeno-sa"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-sa"><span class="sn-note">Almost all fixed: a literal SA password survived in the setup script and docs for weeks after this pass. The last hardcoded credential didn't leave the repo until mid-June.</span></span>
 None of it changed what the agent does — just whether I'd be comfortable leaving it running
 while I'm not watching.
 </p>

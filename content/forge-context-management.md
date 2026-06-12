@@ -1,6 +1,6 @@
 ---
 title: Meet Forge — context management for AI agent harnesses
-date: 2026-06-11
+date: 2026-06-01
 reading_time: 5 min read
 description: A git-like CLI that gives AI agents a senior engineer's memory of your codebase — automatically, incrementally, and always in sync.
 tags: [Rust, Agents, Claude, Tooling]

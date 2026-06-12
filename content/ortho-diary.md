@@ -1,6 +1,6 @@
 ---
 title: I built a medical records system with no edit button
-date: 2026-06-11
+date: 2026-06-05
 reading_time: 7 min read
 description: Ortho Diary — clinical records for one orthopaedic surgeon, where every form is 195 lines of JSON, a saved visit can only be amended (never edited), and Claude reads discharge PDFs without ever getting write access.
 tags: [FastAPI, React, Claude, TypeScript, Healthcare]

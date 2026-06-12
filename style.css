@@ -355,13 +355,6 @@ article .stat { background: var(--pre-bg); border: 1px solid var(--rule); border
 article .stat-num { font: 800 34px ui-monospace, Menlo, monospace; color: var(--link); line-height: 1.1; margin-bottom: 6px; }
 article .stat-label { font-size: 13px; color: var(--muted); }
 
-@media (max-width: 600px) {
-  article .cardgrid, article .stats { grid-template-columns: 1fr; }
-  article .anatomy-body { flex-direction: column; }
-  article .anatomy-sections { width: 100%; display: flex; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--rule); }
-  article .anatomy-section { border-bottom: none; }
-}
-
 /* ---- Sidenotes (margin annotations, eieio/Tufte style) ----
    Authoring (inline, inside a raw-HTML <p>):
    <span class="sn"><label class="sn-pill" for="sn-UNIQUE"></label><input
@@ -479,9 +472,56 @@ html.debug body::after {
 html.debug .wrap * { outline: 1px solid rgba(64, 128, 255, 0.18); }
 
 /* ---- Mobile ---- */
-@media (max-width: 540px) {
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .wrap { padding: 28px 18px 64px; }
+
+  /* header: tighter, room for all four links + toggle on one or two lines */
+  header.site { margin-bottom: 32px; gap: 6px 14px; }
+  nav a { margin-left: 13px; font-size: 14px; }
+  .theme-toggle { margin-left: 13px; width: 28px; height: 28px; }
+
+  /* intro: stacked, photo still prominent */
   .intro { flex-direction: column; gap: 16px; }
-  .intro img { width: 90px; height: 90px; }
+  .intro img { width: 120px; height: 120px; }
+  .intro h1 { font-size: 22px; }
+
+  /* lists */
   .entries li { flex-direction: column; gap: 2px; }
   .entries .date { min-width: 0; }
+
+  /* article typography */
+  article h1 { font-size: 23px; }
+  article h2 { font-size: 19px; margin-top: 30px; }
+  article .lede { font-size: 16.5px; }
+  article pre { font-size: 13px; padding: 12px 14px; }
+
+  /* tables scroll instead of blowing out the viewport */
+  article table { display: block; overflow-x: auto; font-size: 14px; }
+
+  /* terminal + diagram blocks: tighter */
+  article .term { font-size: 12px; padding: 12px 14px; }
+  article .pipe { font-size: 12px; gap: 6px; }
+  article .flow { padding: 14px; }
+  article .flow-label { width: 100%; }
+  article .flow .box { min-width: 0; padding: 5px 8px; font-size: 11px; }
+
+  /* grids collapse to a single column */
+  article .cardgrid, article .stats { grid-template-columns: 1fr; }
+  article .stat { padding: 14px; }
+  article .stat-num { font-size: 28px; }
+
+  /* anatomy widget stacks */
+  article .anatomy-body { flex-direction: column; }
+  article .anatomy-sections { width: 100%; display: flex; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--rule); }
+  article .anatomy-section { border-bottom: none; padding: 8px 10px; }
+
+  /* steps + callouts */
+  article .step { gap: 12px; padding: 10px 0; }
+  article .step-num { width: 34px; height: 34px; font-size: 12px; }
+  article .decision { padding: 8px 14px; }
+  article .colophon { font-size: 13px; }
+
+  /* banner images shouldn't overhang on small screens */
+  article img.banner { width: 100%; margin-left: 0; transform: none; }
 }

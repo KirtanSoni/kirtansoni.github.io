@@ -1,6 +1,6 @@
 ---
 title: The family jewelry ERP learned to chat in one night
-date: 2026-06-11
+date: 2026-05-24
 reading_time: 8 min read
 description: Xeno Chat — built in one overnight session on May 12: a LangGraph agent over my family's retail SQL Server that answers plain-English questions, draws charts mid-conversation, shows its running cost in rupees, and grades its own answers every morning.
 tags: [TypeScript, LangGraph, Agents, Claude, Observability]
@@ -292,7 +292,7 @@ anyone else touches it: four commits of hardening. The database password had bee
 <code>docker-compose.yml</code>; the connection pool had no limits; the frontend would happily
 start before the backend was listening. All fixed — env-driven config with fail-fast guards,
 pool limits, healthchecks with startup
-ordering.<span class="sn"><label class="sn-pill" for="sn-xeno-sa"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-sa"><span class="sn-note">Almost all fixed: a literal SA password survived in the setup script and docs until today. The last hardcoded credential left the repo the same day this writeup was published.</span></span>
+ordering.<span class="sn"><label class="sn-pill" for="sn-xeno-sa"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-sa"><span class="sn-note">Almost all fixed: a literal SA password survived in the setup script and docs for weeks after this pass. The last hardcoded credential didn't leave the repo until mid-June.</span></span>
 None of it changed what the agent does — just whether I'd be comfortable leaving it running
 while I'm not watching.
 </p>

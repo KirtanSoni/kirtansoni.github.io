@@ -1,6 +1,6 @@
 ---
 title: A GPU in my closet reads job postings now
-date: 2026-06-11
+date: 2026-06-08
 reading_time: 5 min read
 description: Automata — a daily pipeline that scrapes Microsoft, Nvidia, and Apple postings, asks a local 3B model one question about each, and only pings my phone when the answer is good.
 tags: [Python, LLM, vLLM, Pipelines, Automation]

@@ -1,6 +1,6 @@
 ---
 title: ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it
-date: 2026-06-11
+date: 2026-01-18
 reading_time: 4 min read
 description: I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server's own stdin. Go's ServeMux refused to forget a route, and autocert made my best-tested package redundant.
 tags: [Go, Networking, TLS, Infrastructure]

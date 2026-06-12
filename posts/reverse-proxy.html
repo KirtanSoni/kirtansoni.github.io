@@ -20,8 +20,8 @@
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <meta property="article:published_time" content="2026-06-11">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it", "description": "I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server's own stdin. Go's ServeMux refused to forget a route, and autocert made my best-tested package redundant.", "datePublished": "2026-06-11", "url": "https://kirtansoni.com/posts/reverse-proxy.html", "author": {"@type": "Person", "name": "Kirtan Soni", "url": "https://kirtansoni.com"}}</script>
+  <meta property="article:published_time" content="2026-01-18">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it", "description": "I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server's own stdin. Go's ServeMux refused to forget a route, and autocert made my best-tested package redundant.", "datePublished": "2026-01-18", "url": "https://kirtansoni.com/posts/reverse-proxy.html", "author": {"@type": "Person", "name": "Kirtan Soni", "url": "https://kirtansoni.com"}}</script>
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
@@ -42,7 +42,7 @@
 
   <article>
     <h1>ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it</h1>
-    <p class="post-meta">Jun 11, 2026 · 4 min read</p>
+    <p class="post-meta">Jan 18, 2026 · 4 min read</p>
 
 <p class="lede">I wanted every side project reachable under one domain without ever editing a config file again. So I wrote a ~430-line Go reverse proxy whose route table you edit by typing commands into the running server's stdin. Two things happened on the way: Go's <code>ServeMux</code> refused to forget a route, and six lines of <code>autocert</code> made my most thoroughly tested package obsolete.</p>
 <h2>Heavier than the problem deserved</h2>

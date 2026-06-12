@@ -16,50 +16,50 @@
     </item>
 
     <item>
-      <title>Meet Forge — context management for AI agent harnesses</title>
-      <link>https://kirtansoni.com/posts/forge-context-management.html</link>
-      <guid>https://kirtansoni.com/posts/forge-context-management.html</guid>
-      <pubDate>Thu, 11 Jun 2026 09:00:00 +0000</pubDate>
-      <description>A git-like CLI that gives AI agents a senior engineer&#x27;s memory of your codebase — automatically, incrementally, and always in sync.</description>
-    </item>
-
-    <item>
-      <title>13 words, 25 attempts, and a deadlock at 1 a.m.</title>
-      <link>https://kirtansoni.com/posts/word-weave.html</link>
-      <guid>https://kirtansoni.com/posts/word-weave.html</guid>
-      <pubDate>Thu, 11 Jun 2026 09:00:00 +0000</pubDate>
-      <description>Word Weave — a word game where you steer a streaming GPT-3.5 completion toward a quote you&#x27;re never allowed to type. Prototyped at 2:44 a.m., deadlocked the first time someone won, rewritten five weeks after its &quot;final prod version&quot; into a single Go binary.</description>
+      <title>A GPU in my closet reads job postings now</title>
+      <link>https://kirtansoni.com/posts/automata-job-pipeline.html</link>
+      <guid>https://kirtansoni.com/posts/automata-job-pipeline.html</guid>
+      <pubDate>Mon, 08 Jun 2026 09:00:00 +0000</pubDate>
+      <description>Automata — a daily pipeline that scrapes Microsoft, Nvidia, and Apple postings, asks a local 3B model one question about each, and only pings my phone when the answer is good.</description>
     </item>
 
     <item>
       <title>I built a medical records system with no edit button</title>
       <link>https://kirtansoni.com/posts/ortho-diary.html</link>
       <guid>https://kirtansoni.com/posts/ortho-diary.html</guid>
-      <pubDate>Thu, 11 Jun 2026 09:00:00 +0000</pubDate>
+      <pubDate>Fri, 05 Jun 2026 09:00:00 +0000</pubDate>
       <description>Ortho Diary — clinical records for one orthopaedic surgeon, where every form is 195 lines of JSON, a saved visit can only be amended (never edited), and Claude reads discharge PDFs without ever getting write access.</description>
+    </item>
+
+    <item>
+      <title>Meet Forge — context management for AI agent harnesses</title>
+      <link>https://kirtansoni.com/posts/forge-context-management.html</link>
+      <guid>https://kirtansoni.com/posts/forge-context-management.html</guid>
+      <pubDate>Mon, 01 Jun 2026 09:00:00 +0000</pubDate>
+      <description>A git-like CLI that gives AI agents a senior engineer&#x27;s memory of your codebase — automatically, incrementally, and always in sync.</description>
     </item>
 
     <item>
       <title>The family jewelry ERP learned to chat in one night</title>
       <link>https://kirtansoni.com/posts/xeno-chat.html</link>
       <guid>https://kirtansoni.com/posts/xeno-chat.html</guid>
-      <pubDate>Thu, 11 Jun 2026 09:00:00 +0000</pubDate>
+      <pubDate>Sun, 24 May 2026 09:00:00 +0000</pubDate>
       <description>Xeno Chat — built in one overnight session on May 12: a LangGraph agent over my family&#x27;s retail SQL Server that answers plain-English questions, draws charts mid-conversation, shows its running cost in rupees, and grades its own answers every morning.</description>
     </item>
 
     <item>
-      <title>A GPU in my closet reads job postings now</title>
-      <link>https://kirtansoni.com/posts/automata-job-pipeline.html</link>
-      <guid>https://kirtansoni.com/posts/automata-job-pipeline.html</guid>
-      <pubDate>Thu, 11 Jun 2026 09:00:00 +0000</pubDate>
-      <description>Automata — a daily pipeline that scrapes Microsoft, Nvidia, and Apple postings, asks a local 3B model one question about each, and only pings my phone when the answer is good.</description>
+      <title>13 words, 25 attempts, and a deadlock at 1 a.m.</title>
+      <link>https://kirtansoni.com/posts/word-weave.html</link>
+      <guid>https://kirtansoni.com/posts/word-weave.html</guid>
+      <pubDate>Sun, 22 Feb 2026 09:00:00 +0000</pubDate>
+      <description>Word Weave — a word game where you steer a streaming GPT-3.5 completion toward a quote you&#x27;re never allowed to type. Prototyped at 2:44 a.m., deadlocked the first time someone won, rewritten five weeks after its &quot;final prod version&quot; into a single Go binary.</description>
     </item>
 
     <item>
       <title>ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it</title>
       <link>https://kirtansoni.com/posts/reverse-proxy.html</link>
       <guid>https://kirtansoni.com/posts/reverse-proxy.html</guid>
-      <pubDate>Thu, 11 Jun 2026 09:00:00 +0000</pubDate>
+      <pubDate>Sun, 18 Jan 2026 09:00:00 +0000</pubDate>
       <description>I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server&#x27;s own stdin. Go&#x27;s ServeMux refused to forget a route, and autocert made my best-tested package redundant.</description>
     </item>
 
