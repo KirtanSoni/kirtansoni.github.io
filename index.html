@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kirtan Soni</title>
+  <meta name="description" content="Kirtan Soni — production engineer. A directory of things I've written, built, and shipped.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="feed.xml">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="name" href="index.html">Kirtan Soni</a>
+    <nav>
+      <a href="index.html" class="active">Home</a>
+      <a href="writing.html">Writing</a>
+      <a href="projects.html">Projects</a>
+      <a href="tools.html">Tools</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <section class="intro">
+    <!-- Drop a square headshot at assets/me.jpg, or it stays hidden -->
+    <img src="assets/me.jpg" alt="Kirtan Soni" onerror="this.style.display='none'">
+    <div>
+      <h1>Kirtan Soni</h1>
+      <p class="role">Production Engineer at Meta · Menlo Park, CA</p>
+      <p>
+        I build agents, infrastructure, and small sharp tools.
+        This site is a directory of that work — things I've written, built, and shipped.
+      </p>
+      <p class="contact">
+        <a href="mailto:1kirtansoni@gmail.com">Email</a>
+        <a href="https://github.com/KirtanSoni">GitHub</a>
+        <a href="feed.xml">RSS</a>
+      </p>
+    </div>
+  </section>
+
+  <h2 class="section">Recent writing</h2>
+  <ul class="entries">
+    <!-- POSTS:START -->
+    <li>
+      <span class="date">Jun 11, 2026</span>
+      <a class="title" href="posts/resume-that-compiles.html">A résumé that compiles</a>
+    </li>
+    <li>
+      <span class="date">Jun 11, 2026</span>
+      <a class="title" href="posts/forge-context-management.html">Meet Forge — context management for AI agent harnesses</a>
+    </li>
+    <li>
+      <span class="date">Jun 11, 2026</span>
+      <a class="title" href="posts/word-weave.html">13 words, 25 attempts, and a deadlock at 1 a.m.</a>
+    </li>
+    <li>
+      <span class="date">Jun 11, 2026</span>
+      <a class="title" href="posts/ortho-diary.html">I built a medical records system with no edit button</a>
+    </li>
+    <li>
+      <span class="date">Jun 11, 2026</span>
+      <a class="title" href="posts/xeno-chat.html">The family jewelry ERP learned to chat in one night</a>
+    </li>
+    <!-- POSTS:END -->
+  </ul>
+  <p class="more"><a href="writing.html">All writing →</a></p>
+
+  <h2 class="section">Selected projects</h2>
+  <ul class="list">
+    <!-- PROJECTS:START -->
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/ortho-diary">Ortho Diary</a>
+      <p class="desc">Single-surgeon clinical records system shipped as one Python service: schema-driven conditional forms (forms are JSON data, not code), immutable visit entries with an amendment audit chain, and a Claude-powered discharge-summary importer with a mandatory review flow.</p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/xeno-chat">Xeno Chat</a>
+      <p class="desc">Chat with a retail ERP database in plain English and get D3 charts back in the conversation. LangGraph agent over a live jewelry-retail SQL Server DB, with prompt-cache cost optimization, Phoenix tracing, and a daily LLM-as-judge eval pipeline.</p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/automata">Automata</a>
+      <p class="desc">Daily job-scraping and evaluation pipeline: scrapes Microsoft/Nvidia/Apple postings, extracts requirements with a local LLM on a home GPU box, and pushes matching roles via ntfy.</p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/resume-docx">A résumé that compiles</a>
+      <p class="desc">A one-page résumé treated as a compiled artifact: content in JSON, a deterministic DOCX/PDF renderer, and a font-metric-calibrated line-utilization linter.</p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/pyapply">pyapply</a>
+      <p class="desc">PyPI-published CLI that watches the clipboard for job IDs and auto-generates tailored cover letters.</p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/anvil">Anvil + Forge</a>
+      <p class="desc">A Claude-Code-style agentic CLI harness in Rust, with Forge — a git-aware, AI-maintained context store. Dogfooded on itself. In progress.</p>
+    </li>
+    <!-- PROJECTS:END -->
+  </ul>
+  <p class="more"><a href="projects.html">All projects →</a></p>
+
+  <h2 class="section">Tools</h2>
+  <ul class="list">
+    <!-- TOOLS:START -->
+    <li>
+      <a class="title" href="https://pypi.org/project/pyapply/">pyapply</a>
+      <p class="desc">pip install pyapply — automate job applications from your terminal.</p>
+    </li>
+    <!-- TOOLS:END -->
+  </ul>
+
+  <footer class="site">
+    © 2026 Kirtan Soni · <a href="mailto:1kirtansoni@gmail.com">1kirtansoni@gmail.com</a>
+  </footer>
+
+</div>
+<script src="site.js"></script>
+</body>
+</html>

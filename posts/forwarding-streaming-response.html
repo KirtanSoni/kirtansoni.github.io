@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forwarding Streaming Response in Real-Time — Kirtan Soni</title>
+  <meta name="description" content="How to forward an HTTP/1.1 chunked streaming response through a proxy server in real time, in Go.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="../feed.xml">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="name" href="../index.html">Kirtan Soni</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../tools.html">Tools</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <a class="back" href="../writing.html">← All writing</a>
+
+  <article>
+    <h1>Forwarding Streaming Response in Real-Time</h1>
+    <p class="post-meta">Scary is just misunderstood · Dec 25, 2024 · 2 min read</p>
+
+<h2>Backstory</h2>
+<p>The first time I worked with LLMs in my small projects, I faced an issue where my backend sent the LLM's response only after it was fully generated. This made my projects feel slow and unresponsive. I tried figuring out how to stream packets to the client-side in real-time but struggled to find idiomatic resources. So I am attempting to write one.</p>
+<h2>What is Streaming Response ?</h2>
+<p>On a network level, streaming response is just a HTTP/1.1 response. Yes, not web-sockets or RPC.</p>
+<img class="banner" src="../assets/streaming-diagram.png" alt="streaming-diagram" onerror="this.style.display='none'">
+<p>Lets implement one in Go …</p>
+<h2>ChunkMaker Implementation</h2>
+<pre><code>// Handler function that binds to url: http://localhost:8081/generate
+func generateHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set(&quot;Content-Type&quot;, &quot;text/plain&quot;)
+    w.Header().Set(&quot;Transfer-Encoding&quot;, &quot;chunked&quot;)
+
+    // flushes the http.ResponseWriter
+    flusher, _:= w.(http.Flusher)
+
+    // chunks are generated here.
+    for i := 1; i &lt;= 100; i++ {
+
+        // Stores the Chunk number and Time as a string
+        chunk := fmt.Sprintf(&quot;Chunk %d [%s]\n&quot;, i, time.Now().Format(&quot;15:04:05.000&quot;))
+
+        // writes the string as a response
+       _, _:= w.Write([]byte(chunk))
+
+        // Flushes the Response to the User
+        flusher.Flush()
+
+        // Simulates a slow Stream on chunks
+        time.Sleep(time.Millisecond * 100) // 10 chunks per second
+    }
+}</code></pre>
+<p>Use relevant headers for streaming chunked data. It is good manners to let the users of our service know what they are going to receive.</p>
+<p>Now that we know how to create our very own streaming response, lets look into it from a perspective of someone who just uses this service to deliver to their clients.</p>
+<h2>Forwarding Server Implementation</h2>
+<pre><code>func proxyHandler(w http.ResponseWriter, r *http.Request) {
+    // Request the chunks from the generator
+    resp, err := http.Get(&quot;http://localhost:8081/generate&quot;)
+
+    w.Header().Set(&quot;Content-Type&quot;, &quot;text/plain&quot;)
+    w.Header().Set(&quot;Transfer-Encoding&quot;, &quot;chunked&quot;)
+
+    // get flusher here ( as we are also streaming the reponse from the generator )
+    flusher, _:= w.(http.Flusher)
+
+    buf := make([]byte, 1024)
+
+    for {
+        // Copy the Response Chunk into a variable
+        n, err := resp.Body.Read(buf)
+
+        //stop streaming at the End
+        if err == io.EOF { break }
+
+        // Stream The Response
+        if n &gt; 0 {
+            _, _ := w.Write(buf[:n])
+            flusher.Flush()
+        }
+    }
+}</code></pre>
+<p>This code doesn't handle errors to make it look cleaner.</p>
+<p>The source files are available at: <a href="https://github.com/kirtansoni/streaming-in-http">github.com/kirtansoni/streaming-in-http</a></p>
+<p>Lets look at the final result:</p>
+<img src="../assets/streaming-result.gif" alt="streaming-result" onerror="this.style.display='none'">
+<p>Works.</p>
+<p>I hope that helped.</p>
+<p>Thank you for reading!</p>
+    <p class="tags">Tags: Streaming Response, LLM, Forwarding, AI, Golang</p>
+  </article>
+
+  <footer class="site">
+    © 2026 Kirtan Soni · <a href="mailto:1kirtansoni@gmail.com">1kirtansoni@gmail.com</a>
+  </footer>
+
+</div>
+<script src="../site.js"></script>
+</body>
+</html>

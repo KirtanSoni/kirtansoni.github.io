@@ -1,0 +1,332 @@
+---
+title: The family jewelry ERP learned to chat in one night
+date: 2026-06-11
+reading_time: 8 min read
+description: Xeno Chat — built in one overnight session on May 12: a LangGraph agent over my family's retail SQL Server that answers plain-English questions, draws charts mid-conversation, shows its running cost in rupees, and grades its own answers every morning.
+tags: [TypeScript, LangGraph, Agents, Claude, Observability]
+---
+
+<p class="lede">My family's jewelry store runs on an old ERP backed by SQL Server. Every bill, every quotation, every tag of stock is in there — and getting any of it out means clicking through fixed reports or finding someone who writes T-SQL. One night in May I built the third option: a chat window. The first commit landed at 1:48am; by 3:55am the agent had a pipeline for grading its own conversations. Here's what got built that night, and what real use broke afterward.</p>
+
+<h2>Two fixed reports and a guy who knows T-SQL</h2>
+
+<p>
+The ERP is JSoft Extreme, and the version the agent talks to is a restored backup running in
+Docker on my machine — which matters, because it means the agent works against a <b>real</b>,
+messy, production-shaped dataset, not a toy schema. The users are my family, who ask questions
+like "who sold the most this month?" and "why didn't last week's quotations convert?" — in a
+store that runs in Gujarati, which is why there's a toggle that tells the agent to answer in it.
+</p>
+
+<p>
+The shape is two processes and a proxy. A Next.js frontend and a LangGraph JS server run side
+by side; the browser never talks to LangGraph directly — everything goes through a Next.js edge
+proxy, so the frontend only ever sees <code>/api/*</code>.
+</p>
+
+<div class="flow">
+  <div class="flow-row">
+    <span class="flow-label">request</span>
+    <span class="box">Browser</span><span class="arr">→</span>
+    <span class="box">Next.js /api proxy</span><span class="arr">→</span>
+    <span class="box">LangGraph :2024</span>
+  </div>
+  <div class="flow-row">
+    <span class="flow-label">agent loop</span>
+    <span class="box">StateGraph</span><span class="arr">→</span>
+    <span class="box">5 tools</span><span class="arr">→</span>
+    <span class="box">MSSQL (Docker)</span>
+  </div>
+  <div class="flow-row">
+    <span class="flow-label">observability</span>
+    <span class="box">OpenTelemetry</span><span class="arr">→</span>
+    <span class="box">Phoenix :6006</span><span class="arr">→</span>
+    <span class="box">daily eval</span>
+  </div>
+</div>
+
+<p>
+The agent itself is deliberately boring: a two-node <code>StateGraph</code> —
+<code>agent → tools → agent</code> — that loops until the model stops emitting tool calls.
+That's the part that took the least time all night. Everything interesting happened in the
+tools, the prompt, and the plumbing around them — starting with the part where the model was
+confidently wrong about my own store.
+</p>
+
+<h2>It answered "yesterday" with year-old data</h2>
+
+<p>
+By the time the initial commit landed at 1:48am, the system prompt already carried scar
+tissue — the commit message lists a "corrected salesman join pattern, HSN code mapping, and
+dynamic date injection." Each of those was a wrong answer first. The model assumed it was 2025
+and cheerfully answered "yesterday" with year-old data. The salesperson leaderboard came out
+wrong because the obvious column is a lie. The traps, as the prompt now records them:
+</p>
+
+<table>
+  <tr><th>Trap</th><th>What the prompt says</th></tr>
+  <tr><td>Wrong year</td><td>Today's date is injected at call time. Without it the model happily assumed it was 2025.</td></tr>
+  <tr><td>Financial year</td><td>April 1 – March 31, with explicit FY ranges spelled out. "Compare FY 2024-25 vs 2025-26" is the most common question in a family business.</td></tr>
+  <tr><td>NULL SalesmanID</td><td><code>trnSales.SalesmanID</code> is NULL for most rows. The authoritative field is on the line items — the prompt includes the exact three-table join so salesperson leaderboards come out right the first time.</td></tr>
+  <tr><td>HSN code lies</td><td>In this store's data, HSN 711311 is used for <b>silver</b>, even though the code nominally covers gold alloys. An agent reasoning from general HSN knowledge would mislabel it as 18K gold.</td></tr>
+  <tr><td>Quotation remarks</td><td>The reason a quotation didn't convert ("rate issue", "will come later") hides in free-text <code>Remarks</code> columns. The prompt tells the agent to always fetch them for conversion analysis.</td></tr>
+</table>
+
+<p>
+None of this is discoverable from the schema. It's tribal knowledge extracted from sessions
+that went wrong, written down where the model can't miss it — the same job a senior analyst's
+onboarding notes would do for a human. The prompt also documents key columns for the core
+tables, which is why the agent rarely needs a schema tool at all. But it does have tools.
+</p>
+
+<h2>Five tools, one gate</h2>
+
+<div class="cardgrid">
+  <div class="card">
+    <div class="card-label good">query_database</div>
+    <p>SELECT-only T-SQL. Default 10 rows, hard cap 200. Injects <code>TOP N</code> into the query so SQL Server never sends more than the cap over the wire.</p>
+  </div>
+  <div class="card">
+    <div class="card-label good">get_schema_snapshot</div>
+    <p>Column names for the 12 core tables, cached in-process. The tool description itself warns the model: "use sparingly — the result enters conversation context."</p>
+  </div>
+  <div class="card">
+    <div class="card-label good">describe_table</div>
+    <p>Columns + types for a single table, via a parameterized <code>INFORMATION_SCHEMA</code> query. The cheap option when one unknown table comes up.</p>
+  </div>
+  <div class="card">
+    <div class="card-label good">list_tables</div>
+    <p>Every table in the database. Mostly a fallback — the prompt documents the tables that matter.</p>
+  </div>
+  <div class="card">
+    <div class="card-label good">render_chart</div>
+    <p>Doesn't render anything on the server. Validates <code>payload.type</code> and returns the payload as JSON — the frontend does the rest.</p>
+  </div>
+</div>
+
+<p>
+Honesty about the write-protection: it's three string checks — must start with
+<code>SELECT</code>, no second statement after a semicolon, no <code>SELECT … INTO</code> —
+not a SQL parser. That's fine for its actual threat model (a well-meaning model writing bad SQL,
+used by my family on my hardware), but the proper fix is a read-only database login, which is
+still on the list. Right now the connection uses the admin account, so the tool gate is the
+only gate.
+</p>
+
+<h2>Charts appear between the sentences</h2>
+
+<p>
+The part people react to: ask for a dashboard and one appears <i>in the chat</i>, between the
+agent's sentences. The trick is that <code>render_chart</code> is a tool whose "result" is just
+<code>JSON.stringify(payload)</code>. The chat UI (built on assistant-ui) routes
+<code>render_chart</code> tool calls to a <code>ChartRenderer</code> component instead of the
+generic tool-call fallback; it parses the JSON, checks <code>payload.type</code> against five
+known types, and mounts the matching React component.
+</p>
+
+<div class="pipe">
+  <span class="box">query_database</span><span class="arr">→</span>
+  <span class="box">agent aggregates</span><span class="arr">→</span>
+  <span class="box">render_chart(payload)</span><span class="arr">→</span>
+  <span class="box">JSON in message</span><span class="arr">→</span>
+  <span class="box">ChartRenderer</span><span class="arr">→</span>
+  <span class="box">React + D3 SVG</span>
+</div>
+
+<p>
+Five payload types: <code>bar</code>, <code>grouped-bar</code>, <code>hourly</code> (a dual line
+chart of quotes vs bills by hour), <code>kpis</code> (a tile grid with change percentages), and
+<code>dashboard</code> (KPIs plus a chart grid in one card). The components use D3 strictly for
+math — <code>scaleBand</code>, <code>scaleLinear</code>, <code>max</code> — and React renders the
+SVG declaratively. No <code>useEffect</code> DOM mutation, no D3 selections fighting React for
+ownership of the tree.
+</p>
+
+<div class="decision">
+  <b>Decision — the model formats the numbers.</b> KPI values are pre-formatted strings
+  (<code>"₹11.4L"</code>, <code>"46.2%"</code>), not raw numbers. Indian number formatting —
+  lakhs and crores — is genuinely annoying to do generically in the component, and the model
+  already knows the context ("is this rupees or a count?"). The schema pushes that judgment to
+  the caller and keeps the chart components dumb.
+</div>
+
+<h2>2:26am: I needed to watch it think</h2>
+
+<p>
+Forty minutes after the first commit, the second one added tracing — because debugging an agent
+by reading its chat output is like debugging a program by reading its stdout. The entire setup
+is one 21-line file. <code>backend/instrumentation.ts</code> registers an OTLP exporter pointed
+at a self-hosted Phoenix instance (running in the same Docker Compose as the database) and
+patches LangChain's callback manager via OpenInference's <code>LangChainInstrumentation</code>.
+It's imported as the first line of the agent module, so it's active before any LangGraph code
+loads. Every agent invocation, tool call, and LLM request shows up as a linked trace in Phoenix
+within seconds — full SQL text, full tool results, token counts per call.
+</p>
+
+<p>
+By 3:00am Phoenix was more than a trace viewer: the system prompt itself moved into Phoenix's
+prompt registry.<span class="sn"><label class="sn-pill" for="sn-xeno-fallback"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-fallback"><span class="sn-note">The 3:00am version kept a graceful local fallback if Phoenix was unreachable. The 3:15am version deleted it — a fallback that silently serves a stale prompt is worse than a crash. Phoenix is infra now, same as the database.</span></span>
+The backend fetches the named prompt once per process and fills in <code>{{today}}</code>-style
+variables at call time, which means I can edit and version the prompt — the highest-leverage
+file in the project — in the Phoenix UI without redeploying the agent.
+</p>
+
+<h2>3:55am: it grades its own homework</h2>
+
+<p>
+The last thing built that night was the thing that watches everything else. Every conversation
+produces traces; a script run daily turns them into grades. It pulls yesterday's LLM spans from
+Phoenix, groups them by trace, and scores each conversation two ways.
+</p>
+
+<p>
+The first score is pure code — a weighted composite of four signals:
+</p>
+
+<table>
+  <tr><th>Signal</th><th>Weight</th><th>How it's scored</th></tr>
+  <tr><td>Token efficiency</td><td>0.40</td><td>1.0 under an 8K-token budget, linear decay to 0.0 at 30K</td></tr>
+  <tr><td>LLM-call efficiency</td><td>0.25</td><td>1.0 for a single call, −0.2 per extra loop iteration</td></tr>
+  <tr><td>SQL correctness</td><td>0.20</td><td>−0.25 per tool result that came back <code>Error:</code></td></tr>
+  <tr><td>Schema sufficiency</td><td>0.15</td><td>−0.3 per mid-session schema lookup — the prompt should have been enough</td></tr>
+</table>
+
+<p>
+The second score is an LLM judge — Haiku, cheap, with structured output
+(<code>score</code>, <code>label</code>, <code>reason</code>) — that reads only the user's
+question and the final answer and judges whether the answer actually addresses the
+question.<span class="sn"><label class="sn-pill" for="sn-xeno-judge"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-judge"><span class="sn-note">The judge never sees the SQL or the tool results. It grades the answer, not the work — which is the point, and also why it can be fooled by a confident wrong answer the code score happens to like.</span></span>
+Both scores are written back to the trace's root span as Phoenix annotations, so the trace list
+becomes a sortable quality dashboard. Traces with composite ≥ 0.65 that the judge didn't mark
+incorrect get appended to a Phoenix dataset — a steadily growing regression set built from real
+usage, for free.
+</p>
+
+<div class="term-window">
+  <div class="term-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="term-title">npm run eval:daily</span></div>
+  <div class="term">
+<span class="m">Evaluating traces from 2026-06-09T18:30Z → 2026-06-10T18:30Z</span><br>
+<span class="m">Found 41 LLM spans across 12 traces.</span><br>
+&nbsp;<br>
+&nbsp;&nbsp;trace <span class="b">a3f81c02</span> | <span class="g">efficient 0.91</span> | tokens=5,840 | calls=2 | errors=0 | quality=<span class="g">correct</span><br>
+&nbsp;&nbsp;trace <span class="b">7c20e9b4</span> | <span class="y">degraded 0.62</span> | tokens=14,210 | calls=4 | errors=1 | quality=<span class="g">correct</span><br>
+&nbsp;&nbsp;trace <span class="b">f0d2417a</span> | <span class="r">expensive 0.38</span> | tokens=27,950 | calls=6 | errors=2 | quality=<span class="y">partial</span><br>
+<span class="m">&nbsp;&nbsp;...</span><br>
+&nbsp;<br>
+<span class="m">Done. 12 traces annotated, 7 added to dataset.</span>
+  </div>
+</div>
+
+<p>
+(Illustrative output — the shape and thresholds are real, the trace IDs and counts above are not
+from the live database.)
+</p>
+
+<div class="decision">
+  <b>Decision — efficiency and quality are separate annotations.</b> A cheap wrong answer and an
+  expensive right one fail differently. Folding the judge's quality score into the composite
+  would have hidden exactly the cases I care about — so efficiency is a CODE annotation, quality
+  is an LLM annotation, and the dataset filter requires both.
+</div>
+
+<h2>3pm: the bill for the night before</h2>
+
+<p>
+Then I slept, used it, and looked at the traces. Agent loops over a database are token-hungry:
+a long system prompt plus growing tool results, re-sent on every iteration. The afternoon
+commit of the same day was entirely about cost, and two changes did most of the work.
+</p>
+
+<p>
+<b>First, prompt-cache breakpoints.</b> The system prompt block is marked with
+<code>cache_control: ephemeral</code>, and before each model call a helper walks the message
+history backwards, finds the last substantial tool result (over 100 characters), and marks that
+block too. On the next turn, everything up to the breakpoint is served from the Anthropic prompt
+cache — cache reads are billed at $0.30/M tokens versus $3/M for fresh input, so the bulk of a
+long thread costs a tenth of what it would otherwise.
+</p>
+
+<div class="decision">
+  <b>Decision — make waste impossible, not discouraged.</b> The first version asked the model
+  nicely to limit rows. The afternoon version rewrites <code>SELECT&nbsp;…</code> into
+  <code>SELECT TOP&nbsp;N&nbsp;…</code> before execution, and the result comes back in a compact
+  <code>{cols, rows}</code> format — column names once, value arrays per row — about 3–4×
+  smaller than the usual array-of-objects. Every row a tool returns sits in context for the rest
+  of the thread, so the format <i>is</i> the cost control. The schema snapshot got the same
+  treatment: column types dropped, and one 80-column table evicted from it entirely.
+</div>
+
+<p>
+<b>Second, the cost is visible.</b> The meter had been there since the first commit; the
+afternoon made its number honest. Every AI message carries <code>usage_metadata</code>; a React
+context sums input, output, cache-write and cache-read tokens across the thread and prices them
+with the real per-bucket rates. A small pill in the composer shows the running cost in
+rupees.<span class="sn"><label class="sn-pill" for="sn-xeno-rupee"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-rupee"><span class="sn-note">At a hardcoded 85 rupees to the dollar. The meter is a behavioral nudge, not an accounting system — if the exchange rate drifts 5%, the amber threshold drifts with it and nobody is harmed.</span></span>
+It's grey while the thread is cheap, turns amber past about ₹25, and at about ₹64 it goes red
+and grows a "New chat →" button — because by that point the context is bloated and starting
+fresh is genuinely cheaper than continuing.
+</p>
+
+<div class="decision">
+  <b>Decision — nudge, don't block.</b> The meter never stops you from sending another message.
+  It just makes the marginal cost of a bloated thread visible at the exact moment you're about
+  to pay it, and puts the escape hatch one click away. That turned out to be enough — long
+  threads stopped happening once the number was on screen.
+</div>
+
+<h2>Three days later, real use found the race</h2>
+
+<p>
+The meter is also where reality landed the first punch. On May 15 I noticed that switching
+threads while a slow response was still in flight would let the <i>old</i> thread's usage data
+overwrite the meter of the thread now on screen — and a stream that finished after a switch did
+the same thing. Classic stale-response race, and it shipped in v1 because a single user testing
+on localhost never switches threads mid-request. The fix is a staleness guard keyed on the
+active thread id at every async boundary, plus unmounting the thread component for one frame on
+switch so the new thread mounts clean.
+</p>
+
+<p>
+Two days after that came the unglamorous pass a "works on my machine" project needs before
+anyone else touches it: four commits of hardening. The database password had been hardcoded in
+<code>docker-compose.yml</code>; the connection pool had no limits; the frontend would happily
+start before the backend was listening. All fixed — env-driven config with fail-fast guards,
+pool limits, healthchecks with startup
+ordering.<span class="sn"><label class="sn-pill" for="sn-xeno-sa"></label><input class="sn-toggle" type="checkbox" id="sn-xeno-sa"><span class="sn-note">Almost all fixed: a literal SA password survived in the setup script and docs until today. The last hardcoded credential left the repo the same day this writeup was published.</span></span>
+None of it changed what the agent does — just whether I'd be comfortable leaving it running
+while I'm not watching.
+</p>
+
+<h2>The graph was never the product</h2>
+
+<p>
+The two-node StateGraph — the thing the project is nominally "about" — is the least interesting
+file in the repo, and that's the lesson. What makes the agent useful is everything wrapped
+around it: the traps written down where the model can't miss them, the row cap it can't talk
+its way past, the cost pill that quietly ended long threads, and the script that grades
+yesterday every morning. I thought I was building an agent; I was mostly writing an onboarding
+document with a chat UI attached.
+</p>
+
+<p>
+It's not done. There's no test suite — the daily eval is the only automated quality signal. The
+SQL guard should be backed by a read-only database login instead of string checks. The schema
+snapshot cache is per-process with no invalidation (fine for a database restored from backups,
+wrong for a live one). And the eval's call-efficiency weight quietly punishes legitimately
+multi-step questions; it needs a per-question-complexity baseline rather than a flat "one call
+is ideal." But the third option exists now: anyone in the family can ask the database a
+question directly, in English or Gujarati, and watch the answer arrive with a chart.
+</p>
+
+<div class="colophon">
+  <b>Stack:</b> Next.js · LangGraph JS · Claude Sonnet · @assistant-ui/react · D3 (scales only) ·
+  mssql · SQL Server 2022 + Phoenix in Docker Compose · OpenTelemetry/OpenInference.<br>
+  <b>Layout:</b>
+  <code>backend/agent.ts</code> (StateGraph + cache breakpoints) ·
+  <code>backend/tools.ts</code> (the five tools) ·
+  <code>backend/prompt.ts</code> (Phoenix-versioned system prompt) ·
+  <code>backend/instrumentation.ts</code> (tracing, 21 lines) ·
+  <code>components/charts/</code> (in-chat React+D3) ·
+  <code>lib/token-context.tsx</code> + <code>token-meter.tsx</code> (the cost pill) ·
+  <code>scripts/eval-daily.ts</code> (code scores + LLM judge).
+</div>

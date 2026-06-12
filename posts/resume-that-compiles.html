@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A résumé that compiles — Kirtan Soni</title>
+  <meta name="description" content="Treating a one-page résumé like a software artifact — content as data, layout as code, a renderer, and a linter that measures how well every line is used.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="../feed.xml">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="name" href="../index.html">Kirtan Soni</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../tools.html">Tools</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <a class="back" href="../writing.html">← All writing</a>
+
+  <article>
+    <h1>A résumé that compiles</h1>
+    <p class="post-meta">Jun 11, 2026 · 6 min read</p>
+
+<p class="lede">Treating a one-page résumé like a software artifact: content as data, layout as code, a renderer, and a linter that measures how well every line is used. Built iteratively with a render → screenshot feedback loop.</p>
+<h2>The premise</h2>
+<p>
+A résumé is usually a fragile Word document you nudge by hand until it looks right.
+I wanted the opposite: a <b>source of truth in data</b>, a <b>deterministic renderer</b>,
+and an <b>automated check</b> that the output is actually good — the same way you'd treat
+any small program. The result is a pipeline where the content lives in JSON, a Python
+script renders it to a pixel-faithful PDF, and a custom linter scores how much of every
+line the text actually fills.
+</p>
+<figure>
+  <img src="../assets/resume.png" alt="The rendered one-page résumé">
+  <figcaption>The output: one page, generated entirely from a JSON file. Section rules, justified bullets, live hyperlinks, embedded-font fidelity.</figcaption>
+</figure>
+<h2>1 · Forensics on the original</h2>
+<p>
+It started from a 1.2&nbsp;MB <code>.docx</code>. The first job was understanding how it was
+built. The file was a ZIP of XML, and the metadata told a story: created in Word, run
+through a <code>3-Heights PDF</code> tool, with four weights of <b>Carlito</b> (a Calibri clone)
+embedded.<span class="sn"><label class="sn-pill" for="sn-fonts"></label><input class="sn-toggle" type="checkbox" id="sn-fonts"><span class="sn-note">The embedded fonts are nearly all of that 1.2&nbsp;MB. The actual words on a one-page résumé barely register.</span></span> In other words, it was a <b>PDF that had been converted back into a DOCX</b>.
+</p>
+<p>
+That diagnosis mattered. A reconstructed DOCX has no real structure — no tables, just
+54 paragraphs positioned with tabs and runs of manual spaces, plus converter noise like
+explicit <code>strike=0</code> toggles on every run and words split mid-token
+(<code>"Post"+"g"+"reS"+"QL"</code>).
+</p>
+<div class="decision">
+  <b>Decision — semantic rebuild, not pixel clone.</b> Cloning the messy XML would have
+  reproduced the mess. Instead I rebuilt the résumé <i>semantically</i>: real paragraph
+  styles, one clean bullet list, and a right-aligned tab stop for dates instead of dozens
+  of literal spaces. It looks the same and is actually editable.
+</div>
+<h2>2 · Content as data (in Markdown)</h2>
+<p>
+Content and layout are separated. Everything a human edits lives in <code>resume.json</code>;
+all positioning lives in <code>build_resume.py</code>. The early version encoded bold/italic/links
+as nested arrays — ugly and hard to write. So inline formatting became <b>Markdown</b>, parsed
+by the renderer.
+</p>
+<pre><code>{ "header": "**Production Engineer** at **Meta**  *Menlo Park, CA*",
+  "date": "May 2025 - Present",
+  "bullets": [
+    "Owned a CI pipeline processing 100K+ diffs/day ... gated on Meta's
+     [Diff Risk Score](https://engineering.fb.com/...) so each changeset ran
+     only the checks likely to catch its regressions."
+  ] }</code></pre>
+<div class="decision">
+  <b>Decision — Markdown strings, parsed in the script.</b> <code>**bold**</code>,
+  <code>*italic*</code>, <code>[text](url)</code> become real docx runs and hyperlinks.
+  It's diff-friendly, trivial for a human <i>or an LLM</i> to write, and keeps the JSON flat.
+</div>
+<h2>3 · The render pipeline &amp; the screenshot loop</h2>
+<p>
+The renderer uses <code>python-docx</code>. To <i>see</i> the result, the document is converted
+with headless LibreOffice and rasterized — so every change can be inspected visually, not just
+asserted in code.
+</p>
+<div class="pipe">
+  <span class="box">resume.json</span><span class="arr">→</span>
+  <span class="box">python-docx</span><span class="arr">→</span>
+  <span class="box">.docx</span><span class="arr">→</span>
+  <span class="box">LibreOffice</span><span class="arr">→</span>
+  <span class="box">.pdf</span><span class="arr">→</span>
+  <span class="box">pdftoppm</span><span class="arr">→</span>
+  <span class="box">.png preview</span>
+</div>
+<p>
+One command (<code>./build.sh</code>) runs the whole chain. The PNG is the feedback signal:
+catch a left-aligned title, a two-page spill, or a stray underline by looking, then fix the data
+and re-run.
+</p>
+<h2>4 · The interesting part: a line-utilization linter</h2>
+<p>
+A bullet with five words stranded on its own line wastes space. I wanted a number for it:
+<b>100% = the line is full, 0% = blank</b>. And a rule — never split a bullet to fix it; if it
+wraps to two lines, report <i>both</i> lines so the wording can be adjusted.
+</p>
+<p>
+The naïve approach is "average character width." That's wrong — proportional fonts vary widely.<span class="sn"><label class="sn-pill" for="sn-widths"></label><input class="sn-toggle" type="checkbox" id="sn-widths"><span class="sn-note">In Carlito a "W" is roughly three times the width of an "i". An average tells you nothing about either.</span></span>
+Instead the linter reads <b>Carlito's real per-glyph advance widths</b> from the embedded TTF,
+sums them, and greedily wraps words exactly the way Word/LibreOffice does. Utilization is then
+<code>natural_text_width / available_width</code>.
+</p>
+<div class="decision">
+  <b>Decision — calibrate against the real renderer, not a guess.</b> The one empirical constant
+  (the column width in points) is tuned by reading the <i>actual</i> wrap points from
+  <code>pdftotext&nbsp;-layout</code> of the rendered PDF and sweeping until the model's predicted
+  line breaks match. Final fit: <b>bullets 18/18, full-width lines 10/10</b>. This is the
+  "screenshot loop" done precisely — exact wrap points instead of counting pixels.
+</div>
+<p>A spot-check against the renderer's own word coordinates confirmed the model is accurate to within a percentage point:</p>
+<table>
+  <tr><th>Last line</th><th>Rendered (actual)</th><th>Linter predicted</th></tr>
+  <tr><td>"autonomously."</td><td>13%</td><td>12%</td></tr>
+  <tr><td>"catch regressions given its risk profile."</td><td>31%</td><td>30%</td></tr>
+  <tr><td>the "Trust but Canary" line</td><td>80%</td><td>81%</td></tr>
+</table>
+<h2>5 · Using the linter to optimize</h2>
+<p>
+With a trustworthy number, rewriting bullets becomes a loop instead of guesswork: write a draft,
+read its last-line utilization, add a concrete detail or trim to one line, repeat. The verdict
+keys on the <b>last</b> line — earlier lines justify to 100% in the render, so only the trailing
+line can waste space.
+</p>
+<div class="term">
+<span class="m"># before — most bullets end with a stranded line</span><br>
+[<span class="y">FAIL</span>] AI &amp; Agentic Systems &gt; bullet 3 &nbsp; util=[94% <span class="y">12%</span>] &nbsp; "...autonomously."<br>
+[<span class="y">FAIL</span>] Testing &amp; Release Infra &gt; bullet 1 &nbsp; util=[98% 97% <span class="y">30%</span>]<br>
+[<span class="y">FAIL</span>] Open-Source &gt; Spotify SDK &gt; bullet 1 &nbsp; util=[99% <span class="y">10%</span>]<br>
+<br>
+<span class="m"># after — every last line now 82–100% full, still one page</span><br>
+[<span class="g">PASS</span>] AI &amp; Agentic Systems &gt; bullet 3 &nbsp; util=[96% <span class="g">83%</span>]<br>
+[<span class="g">PASS</span>] Testing &amp; Release Infra &gt; bullet 1 &nbsp; util=[97% <span class="g">88%</span>]<br>
+[<span class="g">PASS</span>] Open-Source &gt; Spotify SDK &gt; bullet 1 &nbsp; util=[97% <span class="g">83%</span>]
+</div>
+<figure>
+  <img src="../assets/bullets.png" alt="Rendered bullets with full line utilization">
+  <figcaption>The optimized bullets: each one runs close to the right margin on its last line — no stranded words, no wasted vertical space.</figcaption>
+</figure>
+<h2>6 · From one résumé to a directory of them</h2>
+<p>
+One résumé became a reusable Claude Code <b>skill</b>. The insight: you apply to many jobs, but
+you shouldn't rebuild from scratch each time. The skill keeps a <b>directory of versions</b>,
+each tagged with the job it was used for, and exposes three flows:
+</p>
+<table>
+  <tr><th>Flow</th><th>What it does</th></tr>
+  <tr><td><span class="pill">match</span></td><td>Triages saved résumés against a job posting, scores each on <b>experience / projects / technologies</b> relevance, returns a ranked recommendation.</td></tr>
+  <tr><td><span class="pill">create</span></td><td>Tailors a new draft from the closest match, renders + lints it, and leaves it in a <b>temp</b> area — nothing is committed yet.</td></tr>
+  <tr><td><span class="pill">save</span></td><td>Only on confirmation, promotes the draft into the store and records the <b>job it was applied with</b>.</td></tr>
+</table>
+<div class="decision">
+  <b>Decision — weighted, agent-judged matching.</b> Score = <code>0.6·experience +
+  0.3·projects + 0.1·technologies</code>. Experience dominates; the tech stack is the lightest
+  signal (its absence rarely disqualifies). Weights live in a config file, so they're tunable.
+</div>
+<div class="decision">
+  <b>Decision — drafts are temporary until used.</b> Creating a résumé never pollutes the index.
+  A version is only saved when the user confirms they're applying with it — so the store stays an
+  honest record of what was actually sent.
+</div>
+<h2>What it adds up to</h2>
+<p>
+The throughline is treating a document like code: a single data source, a deterministic build,
+a visual feedback loop, and an objective quality gate. The line-utilization linter is the part
+I'm most happy with — it turns a vague "this looks empty" into a calibrated number that's
+accurate to the renderer within a point, and that number is what makes automated rewriting and
+résumé-matching trustworthy.
+</p>
+<div class="colophon">
+  <b>Stack:</b> Python · python-docx · LibreOffice (headless) · poppler (pdftotext/pdftoppm) ·
+  fontTools · embedded Carlito.<br>
+  <b>Layout:</b>
+  <code>resume.json</code> (content) ·
+  <code>build_resume.py</code> (renderer + Markdown parser) ·
+  <code>validator/</code> (line-utilization linter + calibration) ·
+  <code>build.sh</code> (the render→screenshot loop) ·
+  <code>~/.claude/skills/resume-directory/</code> (the match/create/save skill).
+</div>
+    <p class="tags">Tags: Python, Tooling, LLM, Claude, Résumé</p>
+  </article>
+
+  <footer class="site">
+    © 2026 Kirtan Soni · <a href="mailto:1kirtansoni@gmail.com">1kirtansoni@gmail.com</a>
+  </footer>
+
+</div>
+<script src="../site.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PyApply — GenAI App for the automation of job Applications — Kirtan Soni</title>
+  <meta name="description" content="PyApply, a CLI tool that automates job applications and generates AI cover letters.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="../feed.xml">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="name" href="../index.html">Kirtan Soni</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../tools.html">Tools</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <a class="back" href="../writing.html">← All writing</a>
+
+  <article>
+    <h1>PyApply — GenAI App for the automation of job Applications</h1>
+    <p class="post-meta">Jan 13, 2024 · 3 min read</p>
+
+<h2>Demo</h2>
+<p>While navigating the job application process, I encountered numerous tedious and repetitive tasks that consumed valuable time. In response, I developed an application aimed at streamlining and automating the cumbersome aspects of applying for positions at ASU.</p>
+<p>This app reduces the time spent on each application, transforming the process from 5–10 minutes per application to 5 seconds — quite literally.</p>
+<p>Key challenges it addresses:</p>
+<ul><li><strong>History Management:</strong> After securing an interview, it's often challenging to recall the specific details of the job description. This issue arises because ASU job postings are removed once the interview phase commences. Manually managing this information, such as saving your cover letter, resume, and job description, can be laborious. This app seamlessly solves this crisis by automating the process, ensuring you have instant access to the relevant job details even after the posting is taken down.</li><li><strong>Customized Cover Letters:</strong> Crafting personalized cover letters for each job, tailored to the specific position and the custom resume you wish to submit, is time-consuming. This application simplifies this by generating cover letters perfectly suited to the job at hand, significantly reducing the effort required on your part.</li></ul>
+<p>In essence, this app is designed to enhance your ASU job application experience by not only saving you time but also ensuring that you have a comprehensive record of your applications and tailored materials for each position. Streamlining these processes allows you to focus more on securing the opportunities that matter most to you.</p>
+<div class="video">
+  <iframe src="https://www.youtube.com/embed/sDfNcdwJJ5k" title="PyApply demo"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen></iframe>
+</div>
+<h2>USER GUIDE</h2>
+<h3>DOWNLOADING…</h3>
+<p>First, let's download the CLI application. You will require Python installed and configured in your system. there are plenty of tutorials available.</p>
+<h3>PyPI</h3>
+<p>This app is available on the Official Python Package Index. So Downloading it is pretty simple.</p>
+<img src="../assets/pyapply-logo.png" alt="pyapply-logo" onerror="this.style.display='none'">
+<img class="banner" src="../assets/pyapply-pypi.png" alt="pyapply-pypi" onerror="this.style.display='none'">
+<pre><code>pip install pyapply</code></pre>
+<p>Check if it is downloaded correctly</p>
+<pre><code>pyapply about</code></pre>
+<p>If you face an error, Try</p>
+<pre><code>python -m pyapply about</code></pre>
+<p>if this works for you, from here on, add "python -m " before 'pyapply' to all the following commands.</p>
+<h3>CONFIGURING USER DATA</h3>
+<p>before we configure the user data, we will need a Chatgpt API key. You can follow <a href="#">this tutorial</a> to get the key.</p>
+<p>Now let's Configure the user data…</p>
+<pre><code>pyapply set-user &lt;path/to/save/history&gt;</code></pre>
+<p>so, for example, To save the history on your desktop you would use</p>
+<pre><code>pyapply set-user ~/Desktop</code></pre>
+<p>Now, There will be a Prompt form You will need to fill</p>
+<img src="../assets/pyapply-user-form.png" alt="pyapply-user-form" onerror="this.style.display='none'">
+<p class="caption">example user form</p>
+<p>Note: Here I used an invalid GPT key so it showed me an error, But if u paste in a Valid key, You will get greeted by Chatgpt</p>
+<h3>CONFIGURING RESUME</h3>
+<p>Yes, This app will use your resume as a reference while applying to jobs.</p>
+<p>The good thing about having a different command to set up a resume is, If in case u decide to change your resume for a job, you will run this command once more. Copy and paste your resume on a 'resume.txt' file and leave it on your desktop</p>
+<pre><code>pyapply set-resume &lt;path/to/resume.txt&gt;</code></pre>
+<p>Example command</p>
+<pre><code>pyapply set-resume ~/resume.txt</code></pre>
+<p>If you do this correctly, you will receive a Success Message on your terminal</p>
+<h2>ALL DONE</h2>
+<p>Final command</p>
+<pre><code>pyapply listen</code></pre>
+<p>this will start a listener,</p>
+<p>When you copy any Text on your machine,</p>
+<p>It will check for job IDs that end in 'BR'. If found, it will generate a cover letter on your desktop (or wherever you set your user )</p>
+<pre><code>asujobs/history/jobid</code></pre>
+<p>HAPPY JOB HUNTING!</p>
+<p>Few Important things to keep in mind.</p>
+<ol><li>This tool is not meant to be used to spam hiring managers.</li><li>Chatgpt is not dependable, always go and proofread your resumes.</li><li>You are to use this app on your own accord, it is the sole responsibility of the user when they use this app. No responsibility will be taken by the authors.</li></ol>
+    <p class="tags">Tags: GenAI, Automation, CLI, Python, Job Applications</p>
+  </article>
+
+  <footer class="site">
+    © 2026 Kirtan Soni · <a href="mailto:1kirtansoni@gmail.com">1kirtansoni@gmail.com</a>
+  </footer>
+
+</div>
+<script src="../site.js"></script>
+</body>
+</html>

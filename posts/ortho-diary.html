@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>I built a medical records system with no edit button — Kirtan Soni</title>
+  <meta name="description" content="Ortho Diary — clinical records for one orthopaedic surgeon, where every form is 195 lines of JSON, a saved visit can only be amended (never edited), and Claude reads discharge PDFs without ever getting write access.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="../feed.xml">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="name" href="../index.html">Kirtan Soni</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../tools.html">Tools</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <a class="back" href="../writing.html">← All writing</a>
+
+  <article>
+    <h1>I built a medical records system with no edit button</h1>
+    <p class="post-meta">Jun 11, 2026 · 7 min read</p>
+
+<p class="lede">I built a private records system for one orthopaedic surgeon — registry, clinical episode forms, operative log, media, an AI discharge importer. I expected the conditional forms to be the slog and record-editing to be trivial. It went the other way: every form collapsed into 195 lines of JSON, and editing is the thing I refused to build at all.</p>
+<p>
+The brief was nine modules for a single surgeon, to be shipped as one process on one
+machine.<span class="sn"><label class="sn-pill" for="orth-commit"></label><input class="sn-toggle" type="checkbox" id="orth-commit"><span class="sn-note">The git history of this project is exactly one commit. There was no night the routes vanished; whatever drama this post has was premeditated.</span></span>
+Before writing the first endpoint I set three constraints I wasn't going to negotiate with
+myself about: forms are pure data, saved visits are immutable, and the AI never writes a
+record a human hasn't reviewed. Each one is really an <i>absence</i> — a capability the
+system deliberately doesn't have. This is the story of what each absence bought.
+</p>
+<p>
+The shape underneath is two halves with a thin seam: a FastAPI backend (SQLite, a storage
+layer standing in for Google Drive) and a React/TypeScript SPA, with the Python process
+serving both in production. More on that seam later — the forms come first, because the
+forms are where I expected the fight.
+</p>
+<h2>Sixty-seven fields that refuse to sit still</h2>
+<p>
+Clinical forms are conditional by nature. Pick "Lower limb" as the body region and a
+<b>Side</b> field should appear. Tick "Surgery performed" and an 18-field procedure
+section — implant brand, lot number, tourniquet time, blood loss — unfolds. The naive
+implementation hard-codes all of this into React components, and then every new procedure
+type is a frontend change, a review, a rebuild. For a system one surgeon will be extending
+for years, that's rot with a delivery date.
+</p>
+<p>
+So every form in the system — the patient master record, the episode form, the follow-up
+form — is declared in one file, <code>backend/app/form_schema.json</code>: 195 lines,
+67 fields, 13 conditional rules. Visibility is a <code>showIf</code> predicate evaluated
+against the current values by dotted path:
+</p>
+<pre><code>{ &quot;key&quot;: &quot;diagnosis.side&quot;, &quot;type&quot;: &quot;select&quot;, &quot;optionsRef&quot;: &quot;side&quot;,
+  &quot;showIf&quot;: { &quot;field&quot;: &quot;diagnosis.region&quot;, &quot;in&quot;: [&quot;upper_limb&quot;, &quot;lower_limb&quot;] } }
+
+{ &quot;id&quot;: &quot;procedure&quot;, &quot;title&quot;: &quot;Procedure details&quot;,
+  &quot;showIf&quot;: { &quot;field&quot;: &quot;procedure.performed&quot;, &quot;truthy&quot;: true },
+  &quot;fields&quot;: [ ... 18 fields ... ] }</code></pre>
+<p>
+The backend serves this file verbatim at <code>/api/form-schema</code>. On the frontend,
+<code>DynamicForm.tsx</code> walks the schema, reads and writes values by dotted path
+(<code>getPath</code>/<code>setPath</code> in <code>lib/forms.ts</code>), and runs each
+predicate through <code>evalCondition</code> — twelve lines of TypeScript supporting
+<code>equals</code>, <code>in</code>, <code>truthy</code>, and the combinators
+<code>allOf</code> / <code>anyOf</code> / <code>not</code>. That's the entire
+conditional-logic engine. I kept waiting for the case it couldn't express. It hasn't
+come up.
+</p>
+<figure>
+  <img src="../assets/ortho-episode-form.png" alt="The dynamic clinical episode form with conditional sections revealed">
+  <figcaption>The episode form, fully rendered from JSON. "Lower limb" revealed the Side field; ticking "Surgery performed" revealed the Procedure details and Post-op sections. None of this layout exists in the React code.</figcaption>
+</figure>
+<div class="decision">
+  <b>Decision — predicates over expressions.</b> I considered letting the schema embed
+  little JS expressions for visibility. Instead it gets a closed set of predicate
+  operators. That keeps the schema declarative and safe to evaluate, and it means
+  the same file could drive a different renderer (a PDF generator, a mobile client)
+  without an expression interpreter tagging along.
+</div>
+<div class="decision">
+  <b>Decision — the schema lives on the server.</b> The JSON sits next to the backend
+  code and is fetched at runtime, not bundled into the SPA. Adding a procedure type,
+  a field, or a new conditional rule is a JSON edit and a server restart — no React
+  build, no TypeScript change. Code only changes for a brand-new field <i>type</i>
+  (the renderer handles ten: text, textarea, number, date, select, checkbox,
+  searchtext, freeform, comorbidities, rom).
+</div>
+<p>
+The payoff shows in the corners. Range-of-motion fields are a <code>rom</code> type
+whose measures vary by body region, and that mapping is also just data
+(<code>romMeasures</code>, same file).<span class="sn"><label class="sn-pill" for="orth-rom"></label><input class="sn-toggle" type="checkbox" id="orth-rom"><span class="sn-note">Upper limb gets internal/external rotation, lower limb gets adduction, everything else falls back to flexion/extension. The interpreter has never heard of a shoulder.</span></span>
+The BMI field is declared <code>"computed": "bmi", "readonly": true</code> and the
+renderer derives it live from height and weight. Forms were where I expected to fight.
+The fight I actually declined was over editing.
+</p>
+<h2>The endpoint that doesn't exist</h2>
+<p>
+Clinical records have a property most CRUD apps don't: a saved entry is a medico-legal
+document. You don't edit it; you amend it, and the amendment itself is part of the
+record. So the visits router simply has no <code>PUT</code> or <code>PATCH</code>.
+The only way to correct a visit is:
+</p>
+<pre><code>POST /api/visits/{visit_id}/amend
+{ &quot;visit_date&quot;: &quot;2025-01-01&quot;, &quot;episode_type&quot;: &quot;new&quot;,
+  &quot;diagnosis&quot;: { &quot;label&quot;: &quot;ACL tear&quot;, &quot;side&quot;: &quot;right&quot; },
+  &quot;amendment_reason&quot;: &quot;side correction&quot; }   # required</code></pre>
+<p>
+This creates a <b>new</b> visit row linked to the original via
+<code>amends_visit_id</code>, with a mandatory <code>amendment_reason</code>. The
+original row is untouched. The timeline shows both, and the chain of pointers is the
+audit trail.
+</p>
+<div class="decision">
+  <b>Decision — enforce immutability by absence, not by flag.</b> No
+  <code>is_locked</code> column, no permission check that someone could route around —
+  the capability to mutate a visit simply does not exist in the API surface. The test
+  for this (<code>test_visit_is_immutable_and_amendable</code>) asserts the amendment
+  links back to the original <i>and</i> that the patient still has two visits afterwards:
+  the original is preserved, not overwritten.
+</div>
+<figure>
+  <img src="../assets/ortho-patient-profile.png" alt="Patient profile with visit timeline, comorbidity flags and media upload">
+  <figcaption>The patient profile (seeded demo data): derived BMI and ASA grade in the header, co-morbidity flags, and the visit timeline. The only edit affordance on a saved visit is "Amend".</figcaption>
+</figure>
+<p>
+The master record is the deliberate exception — demographics and co-morbidities
+<i>can</i> be updated via <code>PUT /api/patients/{id}</code>, because a patient's
+contact number changing is not a clinical event. The line between mutable identity and
+immutable history is drawn at the visit boundary. And if a human can't overwrite a
+clinical record, a language model certainly can't.
+</p>
+<h2>Claude gets to read, not to write</h2>
+<p>
+Surgeons accumulate discharge summaries as PDFs, and retyping them is exactly the kind
+of work this system exists to kill. The importer turns a PDF into a pre-filled patient
+record — but with a hard rule inherited from the immutability principle: <b>nothing the
+model extracts is ever written to a patient record directly</b>. The extraction lands in
+a review form; the surgeon corrects it field by field and saves; only then does a
+confirm call seal the audit row.
+</p>
+<div class="flow">
+  <div class="flow-row">
+    <span class="flow-label">extract</span>
+    <span class="box">PDF upload</span><span class="arr">→</span>
+    <span class="box">store original</span><span class="arr">→</span>
+    <span class="box">pdfplumber</span><span class="arr">→</span>
+    <span class="box">Claude → JSON</span>
+  </div>
+  <div class="flow-row">
+    <span class="flow-label">review</span>
+    <span class="box">map to form paths</span><span class="arr">→</span>
+    <span class="box">surgeon edits</span><span class="arr">→</span>
+    <span class="box">save record</span>
+  </div>
+  <div class="flow-row">
+    <span class="flow-label">commit</span>
+    <span class="box">confirm import</span><span class="arr">→</span>
+    <span class="box">audit row + PDF attached as media</span>
+  </div>
+</div>
+<p>
+The prompt pins Claude to an exact JSON shape — every field gets a sibling
+<code>*_confidence</code> of high/medium/low.<span class="sn"><label class="sn-pill" for="orth-conf"></label><input class="sn-toggle" type="checkbox" id="orth-conf"><span class="sn-note">Yes, this is the model grading its own homework. The badges aren't a guarantee — they're a "look here first" for the surgeon's eye, which is all a review queue needs.</span></span>
+A mapping layer (<code>claude_to_form</code>) translates the flat extraction into the
+same dotted paths the form engine uses (<code>diagnosis.label</code>,
+<code>procedure.implant_sizes</code>), so the review UI is just <code>DynamicForm</code>
+again with an extra prop: AI-prefilled fields get a colored confidence badge, and
+low-confidence ones get a warning. One schema, one renderer, two jobs.
+</p>
+<div class="decision">
+  <b>Decision — review is mandatory, structurally.</b> The extraction endpoint writes a
+  <code>discharge_imports</code> row (raw extracted text + the full Claude response) but
+  never touches <code>patients</code> or <code>visits</code>. Committing requires the
+  surgeon to save the reviewed form and then hit a separate confirm endpoint, which
+  stamps <code>confirmed_at</code> and attaches the source PDF to the patient's media
+  tagged "Discharge document". Every import is auditable end to end: original PDF,
+  raw text, model output, confirmation time.
+</div>
+<div class="decision">
+  <b>Decision — degrade gracefully, in layers.</b> A scanned PDF yields no text —
+  the endpoint stores the PDF anyway and returns a clear "this needs OCR" message
+  (that's the seam where Cloud Vision would slot in; it's not built). No
+  <code>ANTHROPIC_API_KEY</code> configured? Text is still extracted and stored, with an
+  honest "set the key to enable AI extraction" instead of an error. The key itself is
+  read only on the server — the frontend never sees it.
+</div>
+<h2>Shipping to a laptop, not a cluster</h2>
+<p>
+All of this has to land on one surgeon's machine, which is its own constraint. Dev mode
+runs Vite and uvicorn side by side, but production is a single Python process: FastAPI
+serves the JSON API under <code>/api</code>, mounts the built bundle's assets, and a
+catch-all route returns <code>index.html</code> for any other path — so client-side
+routing survives refreshes and deep links. One guard keeps the seam clean: unknown
+<code>/api/*</code> paths return a JSON 404 instead of falling through to the SPA shell.
+</p>
+<div class="pipe">
+  <span class="box">uvicorn app.main:app</span><span class="arr">→</span>
+  <span class="box">/api/* → routers</span><span class="arr">→</span>
+  <span class="box">SQLite + media_store/</span>
+</div>
+<div class="pipe">
+  <span class="box">uvicorn app.main:app</span><span class="arr">→</span>
+  <span class="box">/* → frontend/dist</span><span class="arr">→</span>
+  <span class="box">index.html fallback</span>
+</div>
+<div class="decision">
+  <b>Decision — local stand-ins behind real seams.</b> This runs with zero external
+  accounts: SQLite for Postgres, a disk-backed <code>Storage</code> protocol for Google
+  Drive, a dev sign-in issuing the same session cookie OAuth would, and a flattened
+  lowercase <code>search_text</code> blob per visit standing in for a Postgres
+  <code>tsvector</code>. The database stores Drive-style file IDs and metadata, never
+  binaries — so swapping the storage layer for the real Drive API needs no schema or
+  frontend change. These are unbuilt production pieces, stated as such; the seams are
+  what I actually designed.
+</div>
+<p>
+That search blob is the least defensible engineering in the system — a lowercase
+substring scan, not a ranked index. It's also the feature that makes the registry feel
+alive: one box that reaches name, MRN, diagnosis, implant details, and freeform notes,
+because everything a visit contains gets flattened into the blob at save time.
+</p>
+<figure>
+  <img src="../assets/ortho-registry.png" alt="Patient registry with full-text search and filter bar">
+  <figcaption>The registry: one search box that reaches name, MRN, diagnosis, procedure, implant details, and freeform notes — backed by the flattened per-visit search blob.</figcaption>
+</figure>
+<h2>Ten promises, ten tests</h2>
+<p>
+The backend has 10 API tests, and they map almost one-to-one onto the system's promises
+rather than its functions: auth gating, derived MRN/BMI/ASA, MRN uniqueness, the
+immutability-and-amend chain, search reaching into freeform notes, the operative log and
+its CSV export, media round-tripping, the schema endpoint, and the importer's no-key
+path.<span class="sn"><label class="sn-pill" for="orth-pdf"></label><input class="sn-toggle" type="checkbox" id="orth-pdf"><span class="sn-note">The importer test feeds a hand-rolled minimal PDF — raw bytes assembled in the test file — so the suite needs no real documents and no API key.</span></span>
+If a constraint matters enough to refuse an endpoint over, it matters enough to assert.
+</p>
+<div class="term-window">
+  <div class="term-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="term-title">pytest — backend/tests/test_api.py</span></div>
+  <div class="term">
+<span class="g">PASSED</span> <span class="m">test_auth_required</span> — no cookie → 401, everywhere<br>
+<span class="g">PASSED</span> <span class="m">test_health</span><br>
+<span class="g">PASSED</span> <span class="m">test_create_patient_derives_mrn_bmi_asa</span> — 90&nbsp;kg / 1.70&nbsp;m → BMI 31.1, diabetes → ASA 3<br>
+<span class="g">PASSED</span> <span class="m">test_mrn_uniqueness</span> — duplicate MRN → 409<br>
+<span class="g">PASSED</span> <span class="m">test_visit_is_immutable_and_amendable</span> — amend links back, original preserved<br>
+<span class="g">PASSED</span> <span class="m">test_search_hits_freeform_notes</span> — "unobtanium" in a note finds the patient<br>
+<span class="g">PASSED</span> <span class="m">test_operative_log_and_csv</span><br>
+<span class="g">PASSED</span> <span class="m">test_media_upload_and_fetch</span> — bytes round-trip through the storage layer<br>
+<span class="g">PASSED</span> <span class="m">test_form_schema_served</span><br>
+<span class="g">PASSED</span> <span class="m">test_importer_without_key_is_graceful</span> — text extracted, source "unconfigured"<br>
+&nbsp;<br>
+<span class="g">10 passed</span>
+  </div>
+</div>
+<h2>What absence buys you</h2>
+<p>
+I started this build thinking the value would be in what I added — the form engine, the
+importer. The thing I didn't know at the start is how much of the system's reliability
+comes from what it <i>can't</i> do. A closed predicate language can't execute arbitrary
+logic. A visits API without <code>PUT</code> can't lose history. An extraction endpoint
+that can't touch <code>patients</code> can't let a hallucination into the record. Each
+constraint removes a class of bug by construction instead of by discipline — and
+discipline is exactly what you don't have at month eleven of maintaining a side system
+for one user.
+</p>
+<p>
+What's missing is equally clear, and worth saying straight: OCR for scanned PDFs is a
+documented seam, not a feature; auth is a dev sign-in awaiting a real OAuth callback;
+search is that substring blob; and the perennial single-SQLite-file questions — backups,
+concurrent writers — are unsolved because for one surgeon on one machine they haven't
+needed to be. The absences I chose are the architecture. These ones are just debt, and
+at least they're labeled.
+</p>
+<div class="colophon">
+  <b>Stack:</b> FastAPI · SQLAlchemy · SQLite · pdfplumber · Anthropic SDK (Claude Sonnet 4) ·
+  React · TypeScript · Vite · Tailwind · vite-plugin-pwa.<br>
+  <b>Layout:</b>
+  <code>backend/app/form_schema.json</code> (the forms, as data) ·
+  <code>backend/app/routers/</code> (auth · patients · visits · media · importer · schema) ·
+  <code>backend/app/ai_importer.py</code> (extract → Claude → field mapping) ·
+  <code>frontend/src/components/DynamicForm.tsx</code> + <code>lib/forms.ts</code> (the form engine) ·
+  <code>backend/tests/test_api.py</code> (10 invariant tests).
+</div>
+    <p class="tags">Tags: FastAPI, React, Claude, TypeScript, Healthcare</p>
+  </article>
+
+  <footer class="site">
+    © 2026 Kirtan Soni · <a href="mailto:1kirtansoni@gmail.com">1kirtansoni@gmail.com</a>
+  </footer>
+
+</div>
+<script src="../site.js"></script>
+</body>
+</html>

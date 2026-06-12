@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Display currently playing Song with Spotipy API in Flask — Kirtan Soni</title>
+  <meta name="description" content="Using the Spotipy API in Flask to display the song your Spotify account is currently playing.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="../feed.xml">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="name" href="../index.html">Kirtan Soni</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../tools.html">Tools</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <a class="back" href="../writing.html">← All writing</a>
+
+  <article>
+    <h1>Display currently playing Song with Spotipy API in Flask</h1>
+    <p class="post-meta">May 19, 2022 · 3 min read</p>
+
+<p>Spotipy Is a python Extension to Spotify API. We will be looking at how we can use it in our personal website and display the song our account is Currently Playing. It is a nice little add on to a portfolio and u can use it to change themes as you listen to Songs too! So lets get Started…</p>
+<h2>SPOTIFY FOR DEVELOPERS:</h2>
+<p>Lets go to <a href="https://developer.spotify.com/dashboard/login">Spotify for developers</a> and make an account to be able to use this API.</p>
+<p>After login/signup go to the dashboard and Create a New App.</p>
+<img src="../assets/spotify-dashboard.png" alt="spotify-dashboard" onerror="this.style.display='none'">
+<p>this app is going to be used as a gateway to make all the transactions to Spotify to Fetch all the data you require for your app.</p>
+<p>Copy The Client ID key and Client Secret from the app and paste it in a new text file.</p>
+<img src="../assets/spotify-keys.png" alt="spotify-keys" onerror="this.style.display='none'">
+<pre><code>SPOTIPY_CLIENT_ID = &quot;client-id-key&quot;
+SPOTIPY_CLIENT_SECRET = &quot;client-secret-key&quot;
+SPOTIPY_REDIRECT_URI=&#x27;http://127.0.0.1:5000/&#x27;</code></pre>
+<p>here just copy the SPOTIPY_REDIRECT_URI, we will see its use in the later part of this article</p>
+<p>Go to &gt; Edit Settings and fill out redirect URIs to your local host and save settings. (After you deploy the website, make sure you add the appropriate URI)</p>
+<img src="../assets/spotify-edit-settings.png" alt="spotify-edit-settings" onerror="this.style.display='none'">
+<p>This will allow spotify to redirect users after authentication back to your server.</p>
+<h2>CODING BEGINS…</h2>
+<p>Now You are all Set up for coding .</p>
+<p>Considering you have a basic understanding of how flask works. (<a href="#">if not here is a basic tutorial</a>) :-</p>
+<p>let us First Install Spotipy in your terminal. (make sure u install it in the flask env)</p>
+<pre><code>pip install spotipy
+pip install python-dotenv</code></pre>
+<p>in app.py</p>
+<pre><code>import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials</code></pre>
+<p>First, We need the user ID of the person who's "currently playing" music you want to display .</p>
+<p>to find a User ID , Share the profile link, and it should be after "http://open.spotify.com/user/" . (Don't worry if you've never seen that scary looking key , spotify generates the user id randomly)</p>
+<p>copy that id and initialize it in a global var in your app.py</p>
+<pre><code>user = &#x27;user_id_goes_here&#x27;</code></pre>
+<p>Now we will also require the scope of the user. In simple words, scope is basically the permissions that spotify will ask the user. Yes, The api will first ask the user to allow it to access all the information you want. There are variety of scopes available on the api. <a href="https://developer.spotify.com/documentation/general/guides/authorization/scopes/">here's the list of a few.</a></p>
+<p>we require ability to read currently playing track from the user.</p>
+<pre><code>scope = &#x27;user-read-currently-playing&#x27;</code></pre>
+<p>Now we need to generate a Token which takes the user id and scope , authorises the access of data from the user.</p>
+<pre><code>token = spotipy.util.prompt_for_user_token(user, scope, redirect_uri = &#x27;http://127.0.0.1:5000/&#x27;)
+sp = spotipy.Spotify(auth = token)</code></pre>
+<p>let us make a route were we will fetch the data from spotify and post it on our html page.</p>
+<p>here Utils is a small component file we made, that has a function that returns only the useful data (since spotify returns a lot of unwanted data that we dont require).</p>
+<h2>Hiding your private data from the code.</h2>
+<p>remember the .txt file you saved a while ago? just rename it to .env</p>
+<p>Here we use a .env file to Hide our Important keys that will be used to log into the Spotify api. Since we cant hard code it in our app.py since everyone will see it , Environment Files allow you to hide these kind of keys.</p>
+<p>your .env file should look like this.</p>
+<pre><code>SPOTIPY_CLIENT_ID=&#x27;client-id&#x27;
+SPOTIPY_CLIENT_SECRET=&#x27;client-secret&#x27;
+SPOTIPY_REDIRECT_URI=&#x27;http://127.0.0.1:5000/&#x27;</code></pre>
+<p>in app .py make sure to add the follow line after all the import files.</p>
+<pre><code>from dotenv import load_dotenv
+load_dotenv()</code></pre>
+<p>all the backend work is over!</p>
+<h2>FRONTEND :-</h2>
+<p>this is some cleaned up code since we are not going to control music just display it. Here the front end is not explained as you can design it in the way you want it to. Tho, the JS is explained and the information on the frontend is refreshed using DOM.</p>
+<p>also lets write a ajax js code that fetches info of song every second.</p>
+<p>ALL DONE!!</p>
+    <p class="tags">Tags: Api Integration, Spotify Api, Spotipy, Flask, Python</p>
+  </article>
+
+  <footer class="site">
+    © 2026 Kirtan Soni · <a href="mailto:1kirtansoni@gmail.com">1kirtansoni@gmail.com</a>
+  </footer>
+
+</div>
+<script src="../site.js"></script>
+</body>
+</html>

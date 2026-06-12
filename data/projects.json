@@ -1,0 +1,139 @@
+[
+  {
+    "name": "Ortho Diary",
+    "year": "2026",
+    "stack": [
+      "FastAPI",
+      "React + TypeScript",
+      "SQLite",
+      "Claude API"
+    ],
+    "desc": "Single-surgeon clinical records system shipped as one Python service: schema-driven conditional forms (forms are JSON data, not code), immutable visit entries with an amendment audit chain, and a Claude-powered discharge-summary importer with a mandatory review flow.",
+    "links": {
+      "repo": "https://github.com/KirtanSoni/ortho-diary",
+      "post": "posts/ortho-diary.html"
+    },
+    "featured": true
+  },
+  {
+    "name": "Xeno Chat",
+    "year": "2026",
+    "stack": [
+      "Next.js",
+      "LangGraph",
+      "Claude API",
+      "SQL Server"
+    ],
+    "desc": "Chat with a retail ERP database in plain English and get D3 charts back in the conversation. LangGraph agent over a live jewelry-retail SQL Server DB, with prompt-cache cost optimization, Phoenix tracing, and a daily LLM-as-judge eval pipeline.",
+    "links": {
+      "repo": "https://github.com/KirtanSoni/xeno-chat",
+      "post": "posts/xeno-chat.html"
+    },
+    "featured": true
+  },
+  {
+    "name": "Automata",
+    "year": "2026",
+    "stack": [
+      "Python",
+      "Playwright",
+      "LangGraph",
+      "vLLM"
+    ],
+    "desc": "Daily job-scraping and evaluation pipeline: scrapes Microsoft/Nvidia/Apple postings, extracts requirements with a local LLM on a home GPU box, and pushes matching roles via ntfy.",
+    "links": {
+      "repo": "https://github.com/KirtanSoni/automata",
+      "post": "posts/automata-job-pipeline.html"
+    },
+    "featured": true
+  },
+  {
+    "name": "A résumé that compiles",
+    "year": "2026",
+    "stack": [
+      "Python",
+      "python-docx",
+      "fontTools"
+    ],
+    "desc": "A one-page résumé treated as a compiled artifact: content in JSON, a deterministic DOCX/PDF renderer, and a font-metric-calibrated line-utilization linter.",
+    "links": {
+      "post": "posts/resume-that-compiles.html",
+      "repo": "https://github.com/KirtanSoni/resume-docx"
+    },
+    "featured": true
+  },
+  {
+    "name": "pyapply",
+    "year": "2024",
+    "stack": [
+      "Python",
+      "Click",
+      "OpenAI API"
+    ],
+    "desc": "PyPI-published CLI that watches the clipboard for job IDs and auto-generates tailored cover letters.",
+    "links": {
+      "package": "https://pypi.org/project/pyapply/",
+      "repo": "https://github.com/KirtanSoni/pyapply",
+      "post": "posts/pyapply-cli-job-applications.html"
+    },
+    "featured": true
+  },
+  {
+    "name": "reverse-proxy",
+    "year": "2025",
+    "stack": [
+      "Go",
+      "Let's Encrypt"
+    ],
+    "desc": "Runtime-configurable Go reverse proxy with automatic Let's Encrypt TLS and an interactive route-management CLI.",
+    "links": {
+      "repo": "https://github.com/KirtanSoni/reverse-proxy",
+      "post": "posts/reverse-proxy.html"
+    },
+    "featured": false
+  },
+  {
+    "name": "Word Weave",
+    "year": "2025",
+    "stack": [
+      "Go",
+      "React",
+      "OpenAI API"
+    ],
+    "desc": "Daily word puzzle where players steer streaming LLM completions to weave a target quote. Go backend with an embedded React SPA, deployed to EC2.",
+    "links": {
+      "repo": "https://github.com/KirtanSoni/word-weave",
+      "post": "posts/word-weave.html"
+    },
+    "featured": false
+  },
+  {
+    "name": "Anvil + Forge",
+    "year": "2026",
+    "stack": [
+      "Rust",
+      "Tokio",
+      "Anthropic API"
+    ],
+    "desc": "A Claude-Code-style agentic CLI harness in Rust, with Forge — a git-aware, AI-maintained context store. Dogfooded on itself. In progress.",
+    "links": {
+      "post": "posts/forge-context-management.html",
+      "repo": "https://github.com/KirtanSoni/anvil"
+    },
+    "featured": true
+  },
+  {
+    "name": "Streaming over HTTP",
+    "year": "2024",
+    "stack": [
+      "Go",
+      "HTTP chunked transfer"
+    ],
+    "desc": "Minimal two-service Go demo of LLM-style chunked HTTP streaming, proxied end-to-end to the browser. Companion code to the blog post.",
+    "links": {
+      "repo": "https://github.com/KirtanSoni/streaming-in-http",
+      "post": "posts/forwarding-streaming-response.html"
+    },
+    "featured": false
+  }
+]

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects — Kirtan Soni</title>
+  <meta name="description" content="Projects by Kirtan Soni.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="feed.xml">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="name" href="index.html">Kirtan Soni</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="writing.html">Writing</a>
+      <a href="projects.html" class="active">Projects</a>
+      <a href="tools.html">Tools</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <h2 class="section">Projects</h2>
+  <p class="page-intro">Things I've built. Source where it's public, writeups where it isn't.</p>
+  <ul class="list">
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/ortho-diary">Ortho Diary</a>
+      <p class="meta">2026 · FastAPI, React + TypeScript, SQLite, Claude API</p>
+      <p class="desc">Single-surgeon clinical records system shipped as one Python service: schema-driven conditional forms (forms are JSON data, not code), immutable visit entries with an amendment audit chain, and a Claude-powered discharge-summary importer with a mandatory review flow.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/ortho-diary">source</a> · <a href="posts/ortho-diary.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/xeno-chat">Xeno Chat</a>
+      <p class="meta">2026 · Next.js, LangGraph, Claude API, SQL Server</p>
+      <p class="desc">Chat with a retail ERP database in plain English and get D3 charts back in the conversation. LangGraph agent over a live jewelry-retail SQL Server DB, with prompt-cache cost optimization, Phoenix tracing, and a daily LLM-as-judge eval pipeline.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/xeno-chat">source</a> · <a href="posts/xeno-chat.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/automata">Automata</a>
+      <p class="meta">2026 · Python, Playwright, LangGraph, vLLM</p>
+      <p class="desc">Daily job-scraping and evaluation pipeline: scrapes Microsoft/Nvidia/Apple postings, extracts requirements with a local LLM on a home GPU box, and pushes matching roles via ntfy.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/automata">source</a> · <a href="posts/automata-job-pipeline.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/resume-docx">A résumé that compiles</a>
+      <p class="meta">2026 · Python, python-docx, fontTools</p>
+      <p class="desc">A one-page résumé treated as a compiled artifact: content in JSON, a deterministic DOCX/PDF renderer, and a font-metric-calibrated line-utilization linter.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/resume-docx">source</a> · <a href="posts/resume-that-compiles.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/pyapply">pyapply</a>
+      <p class="meta">2024 · Python, Click, OpenAI API</p>
+      <p class="desc">PyPI-published CLI that watches the clipboard for job IDs and auto-generates tailored cover letters.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/pyapply">source</a> · <a href="https://pypi.org/project/pyapply/">package</a> · <a href="posts/pyapply-cli-job-applications.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/reverse-proxy">reverse-proxy</a>
+      <p class="meta">2025 · Go, Let&#x27;s Encrypt</p>
+      <p class="desc">Runtime-configurable Go reverse proxy with automatic Let&#x27;s Encrypt TLS and an interactive route-management CLI.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/reverse-proxy">source</a> · <a href="posts/reverse-proxy.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/word-weave">Word Weave</a>
+      <p class="meta">2025 · Go, React, OpenAI API</p>
+      <p class="desc">Daily word puzzle where players steer streaming LLM completions to weave a target quote. Go backend with an embedded React SPA, deployed to EC2.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/word-weave">source</a> · <a href="posts/word-weave.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/anvil">Anvil + Forge</a>
+      <p class="meta">2026 · Rust, Tokio, Anthropic API</p>
+      <p class="desc">A Claude-Code-style agentic CLI harness in Rust, with Forge — a git-aware, AI-maintained context store. Dogfooded on itself. In progress.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/anvil">source</a> · <a href="posts/forge-context-management.html">writeup</a></p>
+    </li>
+    <li>
+      <a class="title" href="https://github.com/KirtanSoni/streaming-in-http">Streaming over HTTP</a>
+      <p class="meta">2024 · Go, HTTP chunked transfer</p>
+      <p class="desc">Minimal two-service Go demo of LLM-style chunked HTTP streaming, proxied end-to-end to the browser. Companion code to the blog post.</p>
+      <p class="meta"><a href="https://github.com/KirtanSoni/streaming-in-http">source</a> · <a href="posts/forwarding-streaming-response.html">writeup</a></p>
+    </li>
+  </ul>
+
+  <footer class="site">
+    © 2026 Kirtan Soni · <a href="mailto:1kirtansoni@gmail.com">1kirtansoni@gmail.com</a>
+  </footer>
+
+</div>
+<script src="site.js"></script>
+</body>
+</html>
