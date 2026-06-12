@@ -42,7 +42,7 @@ SITE_TITLE = "Kirtan Soni"
 SITE_EMAIL = "1kirtansoni@gmail.com"
 SITE_URL = "https://kirtansoni.com"
 RECENT_ON_HOME = 5
-ANALYTICS_ID = ""   # GA4 measurement id ("G-XXXXXXXXXX"); empty = no analytics
+GOATCOUNTER = "https://kirtansoni.goatcounter.com/count"   # empty = no analytics
 
 
 def load_data(name):
@@ -249,12 +249,11 @@ ICON_LINKS = ('<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 
 
 def analytics_snippet():
-    """GA4 tag, or empty string when ANALYTICS_ID is unset."""
-    if not ANALYTICS_ID:
+    """GoatCounter tag (no cookies, skips localhost), or empty string when unset."""
+    if not GOATCOUNTER:
         return ""
-    return (f'<script async src="https://www.googletagmanager.com/gtag/js?id={ANALYTICS_ID}"></script>\n'
-            "  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
-            f"gtag('js',new Date());gtag('config','{ANALYTICS_ID}');</script>")
+    return (f'<script data-goatcounter="{GOATCOUNTER}" '
+            'async src="//gc.zgo.at/count.js"></script>')
 
 
 def head_extras(path, title, desc, og_type="website", post_meta=None):
