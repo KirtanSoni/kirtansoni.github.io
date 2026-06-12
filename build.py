@@ -243,7 +243,8 @@ THEME_SNIPPET = ("<script>(function(){try{var t=localStorage.getItem('theme');"
                  "if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>")
 
 
-ICON_LINKS = ('<link rel="icon" type="image/png" href="/assets/favicon.png">\n'
+ICON_LINKS = ('<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">\n'
+              '  <link rel="icon" type="image/png" href="/assets/favicon.png">\n'
               '  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">')
 
 
