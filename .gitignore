@@ -1,1 +1,5 @@
 .DS_Store
+
+# Local-only: résumé article kept locally, not published
+content/resume-that-compiles.md
+assets/resume.png
