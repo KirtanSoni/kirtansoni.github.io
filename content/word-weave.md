@@ -2,11 +2,11 @@
 title: 13 words, 25 attempts, and a deadlock at 1 a.m.
 date: 2026-02-22
 reading_time: 6 min read
-description: Word Weave — a word game where you steer a streaming GPT-3.5 completion toward a quote you're never allowed to type. Prototyped at 2:44 a.m., deadlocked the first time someone won, rewritten five weeks after its "final prod version" into a single Go binary.
+description: Word Weave: a word game where you steer a streaming GPT-3.5 completion toward a quote you're never allowed to type. Prototyped at 2:44 a.m., deadlocked the first time someone won, rewritten five weeks after its "final prod version" into a single Go binary.
 tags: [Go, React, LLM, Streaming, Game]
 ---
 
-<p class="lede">The second commit in this repo is called <i>"working prototype"</i> and is timestamped 2:44 a.m. It contains a word game with one rule: you can never type the quote you're trying to produce. You pick words from a paragraph GPT-3.5 just wrote, send them back as a prompt, and watch the next completion stream in — hoping the right words fall out. <span class="pill">go + react</span> <span class="pill">token streaming</span></p>
+<p class="lede">The second commit in this repo is called <i>"working prototype"</i> and is timestamped 2:44 a.m. It contains a word game with one rule: you can never type the quote you're trying to produce. You pick words from a paragraph GPT-3.5 just wrote, send them back as a prompt, and watch the next completion stream in, hoping the right words fall out. <span class="pill">go + react</span> <span class="pill">token streaming</span></p>
 
 <p>
 That rule worked on night one. Almost nothing else did. This is the story of the deadlock that hit
@@ -26,22 +26,22 @@ and you win, unlocking the next challenge.
 
 <figure>
   <img src="assets/ww-selecting-word.gif" alt="Selecting words from the paragraph to build a prompt">
-  <figcaption>Building a prompt — words you click leave the paragraph and become draggable bubbles. Hard cap of 13.</figcaption>
+  <figcaption>Building a prompt: words you click leave the paragraph and become draggable bubbles. Hard cap of 13.</figcaption>
 </figure>
 
 <p>
-The fun is the indirection. Say the quote needs the word "rope" — you can't type it; you have to
+The fun is the indirection. Say the quote needs the word "rope." You can't type it; you have to
 find words in the current paragraph that make the model <i>likely</i> to say "rope," and the
 model's output becomes your <b>next</b> word pool. The LLM is both the obstacle and the only tool
-you have. But for that loop to be a game at all, the model has to actually play along — and
+you have. But for that loop to be a game at all, the model has to actually play along, and
 GPT-3.5's first instinct, handed a bag of 13 disconnected words, is to ask what you mean.
 </p>
 
 <div class="decision">
-  <b>Decision — the model is an autocomplete, not a chatbot.</b> The system prompt forces it into
+  <b>Decision: the model is an autocomplete, not a chatbot.</b> The system prompt forces it into
   pure-completion mode: <i>"don't ask any questions, you are an autocomplete feature that will
   generate a sentence of 100 words from the given words."</i> Capped at 150 tokens, fixed seed.
-  Without that, every attempt costs the player a clarifying question instead of a paragraph —
+  Without that, every attempt costs the player a clarifying question instead of a paragraph,
   which kills the game.
 </div>
 
@@ -63,11 +63,11 @@ GPT-3.5's first instinct, handed a bag of 13 disconnected words, is to ask what 
 <h2>It deadlocked the first time someone won</h2>
 
 <p>
-The 2:44 a.m. prototype was a single <code>main.go</code> — it would eventually swell to
-<b>864 lines</b> — holding sessions in a map behind a <code>sync.RWMutex</code>. Winning a
+The 2:44 a.m. prototype was a single <code>main.go</code> (it would eventually swell to
+<b>864 lines</b>) holding sessions in a map behind a <code>sync.RWMutex</code>. Winning a
 challenge called <code>ServeNextChallenge</code>, which took the read lock, then called
 <code>CreateSession</code>, which took the <i>write</i> lock on the same mutex. Go's
-<code>RWMutex</code> won't grant a writer while a reader is active — including when the reader is
+<code>RWMutex</code> won't grant a writer while a reader is active, including when the reader is
 you. The goroutine waited on itself forever. So the game worked perfectly right up until somebody
 won, and then the server quietly stopped answering.<span class="sn"><label class="sn-pill" for="sn-word-idk"></label><input class="sn-toggle" type="checkbox" id="sn-word-idk"><span class="sn-note">The fix landed at 00:53 the next night, in a commit whose message ends "althought idk if its working." It was working. The confidence came later.</span></span>
 </p>
@@ -76,7 +76,7 @@ won, and then the server quietly stopped answering.<span class="sn"><label class
 The other thing the first 24 hours fixed was the bill. The prototype called GPT-4o, which is a
 lot of model for the job of free-associating from 13 words. That evening it became
 GPT-3.5-Turbo.<span class="sn"><label class="sn-pill" for="sn-word-53104"></label><input class="sn-toggle" type="checkbox" id="sn-word-53104"><span class="sn-note">Commit message, verbatim: "using 3.5 instead of 4o for saving 53104$". I did not have $53,104 at stake. The number was a vibe.</span></span>
-A cheaper model isn't just thrift here — a dumber autocomplete is arguably a fairer opponent.
+A cheaper model isn't just thrift here: a dumber autocomplete is arguably a fairer opponent.
 </p>
 
 <h2>Tokens, while they're hot</h2>
@@ -84,7 +84,7 @@ A cheaper model isn't just thrift here — a dumber autocomplete is arguably a f
 <p>
 The part I cared most about getting right, from the prototype onward: the player should see tokens
 appear the moment the model produces them, not a spinner followed by a paragraph. The whole path is
-streaming — no buffering stage anywhere.
+streaming: no buffering stage anywhere.
 </p>
 
 <div class="pipe">
@@ -111,7 +111,7 @@ for chunk := range chunks {
 }</code></pre>
 
 <p>
-The channel close doubles as the "stream finished" signal — that's when the handler runs the word
+The channel close doubles as the "stream finished" signal; that's when the handler runs the word
 match and updates the session, so the green letters update right as the text stops moving. On the
 browser side there's no SSE library, just the raw fetch reader:
 </p>
@@ -137,7 +137,7 @@ writes it.
 </figure>
 
 <div class="decision">
-  <b>Decision — sessions in memory, rate-limited by timestamp.</b> Sessions are a UUID in an
+  <b>Decision: sessions in memory, rate-limited by timestamp.</b> Sessions are a UUID in an
   HttpOnly cookie mapped to state in a <code>map</code> behind that same <code>RWMutex</code>. Each
   session's <code>LastAccessed</code> doubles as a rate limiter: a second LLM call within 3 seconds
   is rejected. Crude, but it caps the OpenAI bill per player without any infra.
@@ -146,10 +146,10 @@ writes it.
 <h2>"Cat" should not solve "category"</h2>
 
 <p>
-The prototype decided whether a quote word was matched with <code>strings.Contains</code> —
-substring matching. That fails in both directions: it hands out freebies whenever a quote word
+The prototype decided whether a quote word was matched with <code>strings.Contains</code>,
+plain substring matching. That fails in both directions: it hands out freebies whenever a quote word
 hides inside a longer one, and it gives the player nothing when the quote says <i>"dreams"</i> and
-the model generates <i>"dreaming"</i> — even though steering the model to <i>dream</i>-anything was
+the model generates <i>"dreaming"</i>, even though steering the model to <i>dream</i>-anything was
 the entire hard part.<span class="sn"><label class="sn-pill" for="sn-word-europe"></label><input class="sn-toggle" type="checkbox" id="sn-word-europe"><span class="sn-note">My favorite freebie: the quote word "rope" lights up the moment the model mentions Europe.</span></span>
 </p>
 
@@ -166,7 +166,7 @@ solved in the session's progress array.
 
 <figure>
   <img src="assets/ww-lit.png" alt="Quote words lit up green as they are matched">
-  <figcaption>Progress on the quote — stem-matched words light up green and stay solved across attempts.</figcaption>
+  <figcaption>Progress on the quote: stem-matched words light up green and stay solved across attempts.</figcaption>
 </figure>
 
 <h2>Five weeks after "final prod version"</h2>
@@ -174,8 +174,8 @@ solved in the session's progress array.
 <p>
 On February 4 I shipped a commit called <i>"final prod version"</i> and stopped. On March 7 I came
 back and wrote two commits in a row, both called <i>"rewrite."</i> The 864-line
-<code>main.go</code> became a thin router over <code>internal/</code> packages — game loop, LLM
-client, sessions, models, frontend — and the React SPA stopped being a separate deployable
+<code>main.go</code> became a thin router over <code>internal/</code> packages (game loop, LLM
+client, sessions, models, frontend), and the React SPA stopped being a separate deployable
 entirely. The Vite build output is compiled <b>into the Go binary</b> with <code>go:embed</code>:
 </p>
 
@@ -194,7 +194,7 @@ Deploying means copying one binary; there is no "frontend deploy" that can drift
 
 <p>
 The rewrite also brought a real deploy path. Deploys are triggered by cutting a <b>GitHub
-release</b> — not every push. The Actions workflow builds the full binary (Node 18 for the Vite
+release</b>, not every push. The Actions workflow builds the full binary (Node 18 for the Vite
 step, Go 1.23 for the rest), then ships it over SSH and bounces the systemd unit.
 </p>
 
@@ -226,20 +226,20 @@ step, Go 1.23 for the rest), then ships it over SSH and bounces the systemd unit
 
 <p>
 One caveat worth being explicit about: the workflow only deploys the Go binary. The stemming
-microservice has to already be running on the host — it's set up once, by hand, and the Go code
+microservice has to already be running on the host; it's set up once, by hand, and the Go code
 expects it at <code>localhost:8000</code>.
 </p>
 
 <p>
 Four days after the rewrite merged, the log reads: <i>"prod push yolo"</i>, then <i>"hardcode
-everything"</i> — twice. That's where the repo still sits, and I'd rather list what those commits
-papered over than pretend otherwise:<span class="sn"><label class="sn-pill" for="sn-word-validate"></label><input class="sn-toggle" type="checkbox" id="sn-word-validate"><span class="sn-note">The prototype actually called <code>Validate</code> on every prompt. The rewrite is where it got lost — rewrites delete bugs and features with equal enthusiasm.</span></span>
+everything"</i>, twice. That's where the repo still sits, and I'd rather list what those commits
+papered over than pretend otherwise:<span class="sn"><label class="sn-pill" for="sn-word-validate"></label><input class="sn-toggle" type="checkbox" id="sn-word-validate"><span class="sn-note">The prototype actually called <code>Validate</code> on every prompt. The rewrite is where it got lost; rewrites delete bugs and features with equal enthusiasm.</span></span>
 </p>
 
 <div class="cardgrid">
   <div class="card">
     <div class="card-label bad">Challenges are hardcoded</div>
-    <p>Five fixed quotes live in <code>internal/models/State.go</code>. The midnight refresh (ZenQuotes + GPT-4o-generated seed paragraphs) is written — and commented out in <code>game.go</code>. The puzzle doesn't actually rotate daily yet.</p>
+    <p>Five fixed quotes live in <code>internal/models/State.go</code>. The midnight refresh (ZenQuotes + GPT-4o-generated seed paragraphs) is written, and commented out in <code>game.go</code>. The puzzle doesn't actually rotate daily yet.</p>
   </div>
   <div class="card">
     <div class="card-label bad">No persistence</div>
@@ -247,23 +247,23 @@ papered over than pretend otherwise:<span class="sn"><label class="sn-pill" for=
   </div>
   <div class="card">
     <div class="card-label bad">Validation isn't enforced</div>
-    <p><code>State.Validate</code> checks that prompt words actually came from the paragraph — and is never called. A crafted POST can send any prompt it wants straight to the model.</p>
+    <p><code>State.Validate</code> checks that prompt words actually came from the paragraph, and is never called. A crafted POST can send any prompt it wants straight to the model.</p>
   </div>
   <div class="card">
     <div class="card-label bad">Odd corners</div>
-    <p>The lemmaSearch URL is hardcoded to <code>localhost:8000</code>, and a few error paths return questionable codes — a missing session gets a 408, as does the rate limit.</p>
+    <p>The lemmaSearch URL is hardcoded to <code>localhost:8000</code>, and a few error paths return questionable codes: a missing session gets a 408, as does the rate limit.</p>
   </div>
 </div>
 
 <h2>What the 2:44 a.m. version already knew</h2>
 
 <p>
-Here's the thing the commit log makes embarrassingly clear: the core loop — steer a streaming
-model using only the words it gave you — worked in the first night's prototype and never needed
+Here's the thing the commit log makes embarrassingly clear: the core loop (steer a streaming
+model using only the words it gave you) worked in the first night's prototype and never needed
 rethinking. Every hour since went into plumbing: locks, stemming, embedding, deploys, the daily
 rotation that still isn't wired up. The prototype proved the game; the next six weeks were me
 discovering that a game is maybe ten percent game. If the loop hadn't been fun at 2:44 a.m., no
-amount of architecture would have saved it — and because it was, even <i>"hardcode everything"</i>
+amount of architecture would have saved it. And because it was, even <i>"hardcode everything"</i>
 ships something worth playing.
 </p>
 

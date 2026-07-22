@@ -1,20 +1,20 @@
 ---
-title: Meet Forge — context management for AI agent harnesses
+title: Meet Forge: context management for AI agent harnesses
 date: 2026-06-01
 reading_time: 5 min read
-description: A git-like CLI that gives AI agents a senior engineer's memory of your codebase — automatically, incrementally, and always in sync.
+description: A git-like CLI that gives AI agents a senior engineer's memory of your codebase: automatically, incrementally, and always in sync.
 tags: [Rust, Agents, Claude, Tooling]
 ---
 
-<p class="lede">A git-like CLI that gives AI agents a senior engineer's memory of your codebase — automatically, incrementally, and always in sync. Forge is part of <b>anvil</b>, a Claude-Code-like agentic harness written in Rust. <span class="pill">built in rust</span></p>
+<p class="lede">A git-like CLI that gives AI agents a senior engineer's memory of your codebase: automatically, incrementally, and always in sync. Forge is part of <b>anvil</b>, a Claude-Code-like agentic harness written in Rust. <span class="pill">built in rust</span></p>
 
 <pre><code>$ forge init && forge update</code></pre>
 
 <h2>The problem: agents read code, they don't understand it</h2>
 
 <p>
-When an AI agent edits a file, it sees structure — function signatures, types, control flow.
-What it <b>doesn't</b> see is the reasoning behind it.<span class="sn"><label class="sn-pill" for="sn-claudemd"></label><input class="sn-toggle" type="checkbox" id="sn-claudemd"><span class="sn-note">Claude Code's CLAUDE.md does this at the project level. Forge does it per file — the difference matters once a project stops fitting in one note.</span></span> Why does this file exist?
+When an AI agent edits a file, it sees structure: function signatures, types, control flow.
+What it <b>doesn't</b> see is the reasoning behind it.<span class="sn"><label class="sn-pill" for="sn-claudemd"></label><input class="sn-toggle" type="checkbox" id="sn-claudemd"><span class="sn-note">Claude Code's CLAUDE.md does this at the project level. Forge does it per file. The difference matters once a project stops fitting in one note.</span></span> Why does this file exist?
 What must never change? Where does new code belong?
 </p>
 
@@ -27,7 +27,7 @@ things that can't be refactored.
 <div class="cardgrid">
   <div class="card">
     <div class="card-label bad">Without Forge</div>
-    <p>Agent reads <code>parser.rs</code> — 400 lines of syn AST traversal.</p>
+    <p>Agent reads <code>parser.rs</code>, 400 lines of syn AST traversal.</p>
     <p>It doesn't know the 15-line collapse threshold is a deliberate policy decision.</p>
     <p>It doesn't know non-Rust parsers should be sibling files, not added here.</p>
     <p>It makes a plausible change. It breaks something subtle.</p>
@@ -35,15 +35,14 @@ things that can't be refactored.
   <div class="card">
     <div class="card-label good">With Forge</div>
     <p>Before touching the file, the agent reads its context note.</p>
-    <p><em>"COLLAPSE_THRESHOLD must remain a named constant — it's a tunable policy decision."</em></p>
+    <p><em>"COLLAPSE_THRESHOLD must remain a named constant; it's a tunable policy decision."</em></p>
     <p><em>"Non-Rust parsers belong in sibling files, not here."</em></p>
     <p>The agent acts with intent. The change is correct the first time.</p>
   </div>
 </div>
 
 <blockquote>
-Think of forge as the notes a senior engineer leaves on their first day handing off a file —
-not documentation, not a spec, but the things you'd only learn after breaking something in production.
+Think of forge as the notes a senior engineer leaves on their first day handing off a file: not documentation, not a spec, but the things you'd only learn after breaking something in production.
 </blockquote>
 
 <h2>Four commands. That's the whole workflow.</h2>
@@ -53,7 +52,7 @@ not documentation, not a spec, but the things you'd only learn after breaking so
     <div class="step-num">01</div>
     <div class="step-body">
       <div class="step-title">Initialize tracking</div>
-      <p class="step-desc">Forge walks your project respecting <code>.gitignore</code>, records the current git hash for every source file, and creates a <code>.anvil/manifest.toml</code>. No context is generated yet — just a baseline snapshot. Fast and free.</p>
+      <p class="step-desc">Forge walks your project respecting <code>.gitignore</code>, records the current git hash for every source file, and creates a <code>.anvil/manifest.toml</code>. No context is generated yet, just a baseline snapshot. Fast and free.</p>
       <span class="step-cmd">forge init</span>
     </div>
   </div>
@@ -69,7 +68,7 @@ not documentation, not a spec, but the things you'd only learn after breaking so
     <div class="step-num">03</div>
     <div class="step-body">
       <div class="step-title">Generate or patch context</div>
-      <p class="step-desc">For new files: sends full source to Claude and generates a structured context note. For changed files: sends only the git diff and the existing note — Claude patches just the affected sections. Up to four files run concurrently. Prints a token and cost breakdown when done.</p>
+      <p class="step-desc">For new files: sends full source to Claude and generates a structured context note. For changed files: sends only the git diff and the existing note, and Claude patches just the affected sections. Up to four files run concurrently. Prints a token and cost breakdown when done.</p>
       <span class="step-cmd">forge update</span>
     </div>
   </div>
@@ -77,7 +76,7 @@ not documentation, not a spec, but the things you'd only learn after breaking so
     <div class="step-num">04</div>
     <div class="step-body">
       <div class="step-title">Wire up your agent</div>
-      <p class="step-desc">Installs a <code>PreToolUse</code> hook into Claude Code's <code>settings.json</code>. From that point on, every time Claude reads a file forge silently injects its context note as <code>additionalContext</code> — no prompt changes, no manual steps. The agent always understands why a file exists before it touches it.</p>
+      <p class="step-desc">Installs a <code>PreToolUse</code> hook into Claude Code's <code>settings.json</code>. From that point on, every time Claude reads a file forge silently injects its context note as <code>additionalContext</code> (no prompt changes, no manual steps). The agent always understands why a file exists before it touches it.</p>
       <span class="step-cmd">forge for-agent claude</span>
     </div>
   </div>
@@ -134,7 +133,7 @@ free-form prose.
       <p>Parses Rust source files using <code>syn</code> and converts the AST into a structured <code>FileSpec</code> summary that an AI agent can reason about without reading every line.</p>
       <br>
       <div class="sec-title">## constraints (example)</div>
-      <p>• Must not panic on any valid Rust source file — unrecognized items return <code>None</code>, never unwrap<br>• <code>COLLAPSE_THRESHOLD</code> must remain a named constant, not an inline literal — it is a tunable policy decision<br>• Output must be deterministic for a given input — no random ordering, no timestamps</p>
+      <p>• Must not panic on any valid Rust source file: unrecognized items return <code>None</code>, never unwrap<br>• <code>COLLAPSE_THRESHOLD</code> must remain a named constant, not an inline literal; it is a tunable policy decision<br>• Output must be deterministic for a given input, no random ordering, no timestamps</p>
     </div>
   </div>
 </div>
@@ -170,7 +169,7 @@ patch only the affected sections. This keeps updates focused and API costs minim
 
 <p>
 The hash stored in <code>manifest.toml</code> is the commit hash of the file
-at the last successful update — not HEAD. So if you update a file across three commits
+at the last successful update, not HEAD. So if you update a file across three commits
 before running <code>forge update</code>, the diff covers all three at once.
 </p>
 
@@ -178,8 +177,8 @@ before running <code>forge update</code>, the diff covers all three at once.
 
 <p>
 Context files live in <code>.anvil/</code>, mirroring the source tree one-to-one.
-The manifest tracks the hash for every file. Both are committed to git — context
-evolves alongside code, and diffs are meaningful.
+The manifest tracks the hash for every file. Both are committed to git, so context
+evolves alongside code and diffs are meaningful.
 </p>
 
 <div class="term">
@@ -205,7 +204,7 @@ evolves alongside code, and diffs are meaningful.
 <h2>By the numbers: forged on itself</h2>
 
 <p>
-The first thing we ran forge on was anvil — the project that built it.<span class="sn"><label class="sn-pill" for="sn-cost"></label><input class="sn-toggle" type="checkbox" id="sn-cost"><span class="sn-note">$1.97 for thirty files of handoff notes. The per-run cost breakdown exists because surprise API bills are how side projects die.</span></span>
+The first thing we ran forge on was anvil, the project that built it.<span class="sn"><label class="sn-pill" for="sn-cost"></label><input class="sn-toggle" type="checkbox" id="sn-cost"><span class="sn-note">$1.97 for thirty files of handoff notes. The per-run cost breakdown exists because surprise API bills are how side projects die.</span></span>
 Here's what that looked like.
 </p>
 
@@ -277,11 +276,11 @@ Here's what that looked like.
   </div>
   <div class="card">
     <div class="card-label good">Transparent cost</div>
-    <p>Every <code>forge update</code> run prints a full token and cost breakdown — input, output, cache reads and writes — so you always know what you spent.</p>
+    <p>Every <code>forge update</code> run prints a full token and cost breakdown (input, output, cache reads and writes) so you always know what you spent.</p>
   </div>
 </div>
 
 <div class="colophon">
-  forge is part of <b>anvil</b> — a Claude Code-like agentic CLI harness written in Rust.<br>
+  forge is part of <b>anvil</b>, a Claude Code-like agentic CLI harness written in Rust.<br>
   <b>Built with:</b> anthropic-sdk-rust · tokio · syn · ignore · clap
 </div>

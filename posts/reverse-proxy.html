@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it — Kirtan Soni</title>
+  <title>ServeMux never forgets, a 430-line reverse proxy you reconfigure by typing at it — Kirtan Soni</title>
   <meta name="description" content="I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server&#x27;s own stdin. Go&#x27;s ServeMux refused to forget a route, and autocert made my best-tested package redundant.">
   <link rel="stylesheet" href="../style.css">
   <link rel="alternate" type="application/rss+xml" title="Kirtan Soni — Writing" href="../feed.xml">
   <link rel="canonical" href="https://kirtansoni.com/posts/reverse-proxy.html">
   <meta property="og:site_name" content="Kirtan Soni">
-  <meta property="og:title" content="ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it">
+  <meta property="og:title" content="ServeMux never forgets, a 430-line reverse proxy you reconfigure by typing at it">
   <meta property="og:description" content="I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server&#x27;s own stdin. Go&#x27;s ServeMux refused to forget a route, and autocert made my best-tested package redundant.">
   <meta property="og:url" content="https://kirtansoni.com/posts/reverse-proxy.html">
   <meta property="og:type" content="article">
@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <meta property="article:published_time" content="2026-01-18">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it", "description": "I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server's own stdin. Go's ServeMux refused to forget a route, and autocert made my best-tested package redundant.", "datePublished": "2026-01-18", "url": "https://kirtansoni.com/posts/reverse-proxy.html", "author": {"@type": "Person", "name": "Kirtan Soni", "url": "https://kirtansoni.com"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "ServeMux never forgets, a 430-line reverse proxy you reconfigure by typing at it", "description": "I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server's own stdin. Go's ServeMux refused to forget a route, and autocert made my best-tested package redundant.", "datePublished": "2026-01-18", "url": "https://kirtansoni.com/posts/reverse-proxy.html", "author": {"@type": "Person", "name": "Kirtan Soni", "url": "https://kirtansoni.com"}}</script>
   <script data-goatcounter="https://kirtansoni.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
@@ -42,7 +42,7 @@
   <a class="back" href="../writing.html">← All writing</a>
 
   <article>
-    <h1>ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it</h1>
+    <h1>ServeMux never forgets, a 430-line reverse proxy you reconfigure by typing at it</h1>
     <p class="post-meta">Jan 18, 2026 · 4 min read</p>
 
 <p class="lede">I wanted every side project reachable under one domain without ever editing a config file again. So I wrote a ~430-line Go reverse proxy whose route table you edit by typing commands into the running server's stdin. Two things happened on the way: Go's <code>ServeMux</code> refused to forget a route, and six lines of <code>autocert</code> made my most thoroughly tested package obsolete.</p>
@@ -66,11 +66,11 @@ Port 80 exists only to answer ACME HTTP-01 challenges and redirect everything el
 The core is <code>RuntimeMux</code>: an <code>RWMutex</code>-guarded map of path → <code>Service</code> (name, path, target URL, and a live <code>httputil.NewSingleHostReverseProxy</code>), wrapped around a standard <code>http.ServeMux</code>. Add a route, register the pattern, done. Then I went to write <code>remove</code> and hit the wall immediately: <b>Go's <code>ServeMux</code> has no unregister.</b> Once you <code>HandleFunc</code> a pattern, it's there for the life of the mux. The standard library hands you a registry and quietly omits the eraser.
 </p>
 <div class="decision">
-  <b>Decision — resolve the route at request time, not registration time.</b> The handler
+  <b>Decision: resolve the route at request time, not registration time.</b> The handler
   registered on the mux is a closure that looks the path up in the live map on every request.
   Add = write to the map (and register the pattern only if it's new). Remove = nil the map entry.
   Re-adding the same path just swaps the map value, which means you can also <i>update</i> a
-  service's upstream URL live — there's a test that flips a path between two backends and checks
+  service's upstream URL live. There's a test that flips a path between two backends and checks
   the second one answers. The pattern itself never leaves the <code>ServeMux</code>; the closure
   decides what happens.
 </div>
@@ -97,15 +97,15 @@ With the table mutable, the management interface could be almost nothing: an int
   </div>
 </div>
 <p>
-A route added at <code>/api</code> is served at <code>https://&lt;domain&gt;/projects/api</code> — <code>http.StripPrefix("/projects", ...)</code> sits in front of the runtime mux, so upstreams never learn the prefix exists. That was the whole feature I'd set out to build, working. Routing turned out to be the easy half. Then I had to put HTTPS in front of it.
+A route added at <code>/api</code> is served at <code>https://&lt;domain&gt;/projects/api</code>: <code>http.StripPrefix("/projects", ...)</code> sits in front of the runtime mux, so upstreams never learn the prefix exists. That was the whole feature I'd set out to build, working. Routing turned out to be the easy half. Then I had to put HTTPS in front of it.
 </p>
 <h2>The 397 lines autocert made redundant</h2>
 <p>
 I did TLS the hard way first, on purpose. An <code>ssl</code> package: load a cert/key pair from disk, serve it by SNI through <code>tls.Config.GetCertificate</code>, pinned TLS 1.2+ cipher suites, tests for all of it.<span class="sn"><label class="sn-pill" for="reve-tests"></label><input class="sn-toggle" type="checkbox" id="reve-tests"><span class="sn-note">For the record: <code>proxy/</code>, the package that runs in production, has 187 lines of tests. <code>ssl/</code>, the package that doesn't, has 311. I tested the corpse more thoroughly than the patient.</span></span> It worked. Then I read what <code>golang.org/x/crypto/acme/autocert</code> actually does.
 </p>
 <div class="decision">
-  <b>Decision — autocert instead of my own cert manager.</b> Issuance, renewal, HTTP-01
-  challenge handling, and a disk cache — in about six lines of setup. The
+  <b>Decision: autocert instead of my own cert manager.</b> Issuance, renewal, HTTP-01
+  challenge handling, and a disk cache, all in about six lines of setup. The
   <code>autocert.Manager</code> hangs its challenge handler on port 80 and its
   <code>TLSConfig()</code> on the 443 server, and certificates just exist. My hand-rolled
   package is still in the repo, fully tested and entirely unused. That's the honest cost of
@@ -117,10 +117,10 @@ The rest of <code>main.go</code> is plumbing done the boring, correct way, becau
 </p>
 <h2>Six unchecked checkboxes</h2>
 <p>
-There's a requirements file in the repo — config-file routes, OAuth on certain paths, logging via Loki and Grafana, host-based rerouting, caching, a portfolio site. Every box is still unchecked, and the gaps are real. <b>Routes don't persist:</b> the initial <code>/wordsweave</code> route and the ACME contact email are hardcoded in <code>main.go</code>, and anything added through the CLI dies with the process. <b><code>remove</code> doesn't really 404:</b> because the <code>ServeMux</code> pattern can't be unregistered, removed paths fall through to a plaintext "Path not found" fallback that returns 200 — a wrong status code that happens to look fine in a browser. <b>The <code>ssl</code> package is dead code</b>, kept around as a candidate for a non-ACME deployment mode the running server has never needed. And the root handler at <code>/</code> is a stub for the portfolio site that doesn't exist yet.<span class="sn"><label class="sn-pill" for="reve-hello"></label><input class="sn-toggle" type="checkbox" id="reve-hello"><span class="sn-note">Specifically, it returns the five bytes <code>hello</code>. The portfolio has been "next up" since March 2025.</span></span> Next, in order: config-file-driven routes so the CLI edits something durable, a real 404 on remove, then logging.
+There's a requirements file in the repo: config-file routes, OAuth on certain paths, logging via Loki and Grafana, host-based rerouting, caching, a portfolio site. Every box is still unchecked, and the gaps are real. <b>Routes don't persist:</b> the initial <code>/wordsweave</code> route and the ACME contact email are hardcoded in <code>main.go</code>, and anything added through the CLI dies with the process. <b><code>remove</code> doesn't really 404:</b> because the <code>ServeMux</code> pattern can't be unregistered, removed paths fall through to a plaintext "Path not found" fallback that returns 200 (a wrong status code that happens to look fine in a browser). <b>The <code>ssl</code> package is dead code</b>, kept around as a candidate for a non-ACME deployment mode the running server has never needed. And the root handler at <code>/</code> is a stub for the portfolio site that doesn't exist yet.<span class="sn"><label class="sn-pill" for="reve-hello"></label><input class="sn-toggle" type="checkbox" id="reve-hello"><span class="sn-note">Specifically, it returns the five bytes <code>hello</code>. The portfolio has been "next up" since March 2025.</span></span> Next, in order: config-file-driven routes so the CLI edits something durable, a real 404 on remove, then logging.
 </p>
 <p>
-I went in to learn what <code>httputil</code> gives you for free, and it does give you a lot — the actual proxying is a one-liner per upstream. The surprise was that the missing pieces were more instructive than the free ones. <code>ServeMux</code> not having an unregister forced the request-time-lookup design, which ended up being the best thing in the codebase — it's what makes live URL swaps possible at all. And <code>autocert</code> went the other way: 397 of my most carefully tested lines, made redundant by six. Build it yourself first; just be ready for the standard library to win.
+I went in to learn what <code>httputil</code> gives you for free, and it does give you a lot; the actual proxying is a one-liner per upstream. The surprise was that the missing pieces were more instructive than the free ones. <code>ServeMux</code> not having an unregister forced the request-time-lookup design, which ended up being the best thing in the codebase. It's what makes live URL swaps possible at all. And <code>autocert</code> went the other way: 397 of my most carefully tested lines, made redundant by six. Build it yourself first; just be ready for the standard library to win.
 </p>
 <div class="colophon">
   <b>Stack:</b> Go 1.23 · <code>net/http</code> · <code>net/http/httputil</code> ·

@@ -1,5 +1,5 @@
 ---
-title: PyApply — GenAI App for the automation of job Applications
+title: PyApply, a GenAI App for the automation of job Applications
 date: 2024-01-13
 reading_time: 3 min read
 description: PyApply, a CLI tool that automates job applications and generates AI cover letters.
@@ -10,7 +10,7 @@ tags: [GenAI, Automation, CLI, Python, Job Applications]
 
 While navigating the job application process, I encountered numerous tedious and repetitive tasks that consumed valuable time. In response, I developed an application aimed at streamlining and automating the cumbersome aspects of applying for positions at ASU.
 
-This app reduces the time spent on each application, transforming the process from 5–10 minutes per application to 5 seconds — quite literally.
+This app reduces the time spent on each application, transforming the process from 5 to 10 minutes per application to 5 seconds, quite literally.
 
 Key challenges it addresses:
 

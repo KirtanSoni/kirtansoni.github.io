@@ -1,5 +1,5 @@
 ---
-title: ServeMux never forgets — a 430-line reverse proxy you reconfigure by typing at it
+title: ServeMux never forgets, a 430-line reverse proxy you reconfigure by typing at it
 date: 2026-01-18
 reading_time: 4 min read
 description: I wanted every side project behind one domain without ever editing a config file, so I wrote a Go reverse proxy whose route table is edited from the server's own stdin. Go's ServeMux refused to forget a route, and autocert made my best-tested package redundant.
@@ -34,11 +34,11 @@ The core is <code>RuntimeMux</code>: an <code>RWMutex</code>-guarded map of path
 </p>
 
 <div class="decision">
-  <b>Decision — resolve the route at request time, not registration time.</b> The handler
+  <b>Decision: resolve the route at request time, not registration time.</b> The handler
   registered on the mux is a closure that looks the path up in the live map on every request.
   Add = write to the map (and register the pattern only if it's new). Remove = nil the map entry.
   Re-adding the same path just swaps the map value, which means you can also <i>update</i> a
-  service's upstream URL live — there's a test that flips a path between two backends and checks
+  service's upstream URL live. There's a test that flips a path between two backends and checks
   the second one answers. The pattern itself never leaves the <code>ServeMux</code>; the closure
   decides what happens.
 </div>
@@ -70,7 +70,7 @@ With the table mutable, the management interface could be almost nothing: an int
 </div>
 
 <p>
-A route added at <code>/api</code> is served at <code>https://&lt;domain&gt;/projects/api</code> — <code>http.StripPrefix("/projects", ...)</code> sits in front of the runtime mux, so upstreams never learn the prefix exists. That was the whole feature I'd set out to build, working. Routing turned out to be the easy half. Then I had to put HTTPS in front of it.
+A route added at <code>/api</code> is served at <code>https://&lt;domain&gt;/projects/api</code>: <code>http.StripPrefix("/projects", ...)</code> sits in front of the runtime mux, so upstreams never learn the prefix exists. That was the whole feature I'd set out to build, working. Routing turned out to be the easy half. Then I had to put HTTPS in front of it.
 </p>
 
 <h2>The 397 lines autocert made redundant</h2>
@@ -80,8 +80,8 @@ I did TLS the hard way first, on purpose. An <code>ssl</code> package: load a ce
 </p>
 
 <div class="decision">
-  <b>Decision — autocert instead of my own cert manager.</b> Issuance, renewal, HTTP-01
-  challenge handling, and a disk cache — in about six lines of setup. The
+  <b>Decision: autocert instead of my own cert manager.</b> Issuance, renewal, HTTP-01
+  challenge handling, and a disk cache, all in about six lines of setup. The
   <code>autocert.Manager</code> hangs its challenge handler on port 80 and its
   <code>TLSConfig()</code> on the 443 server, and certificates just exist. My hand-rolled
   package is still in the repo, fully tested and entirely unused. That's the honest cost of
@@ -96,11 +96,11 @@ The rest of <code>main.go</code> is plumbing done the boring, correct way, becau
 <h2>Six unchecked checkboxes</h2>
 
 <p>
-There's a requirements file in the repo — config-file routes, OAuth on certain paths, logging via Loki and Grafana, host-based rerouting, caching, a portfolio site. Every box is still unchecked, and the gaps are real. <b>Routes don't persist:</b> the initial <code>/wordsweave</code> route and the ACME contact email are hardcoded in <code>main.go</code>, and anything added through the CLI dies with the process. <b><code>remove</code> doesn't really 404:</b> because the <code>ServeMux</code> pattern can't be unregistered, removed paths fall through to a plaintext "Path not found" fallback that returns 200 — a wrong status code that happens to look fine in a browser. <b>The <code>ssl</code> package is dead code</b>, kept around as a candidate for a non-ACME deployment mode the running server has never needed. And the root handler at <code>/</code> is a stub for the portfolio site that doesn't exist yet.<span class="sn"><label class="sn-pill" for="reve-hello"></label><input class="sn-toggle" type="checkbox" id="reve-hello"><span class="sn-note">Specifically, it returns the five bytes <code>hello</code>. The portfolio has been "next up" since March 2025.</span></span> Next, in order: config-file-driven routes so the CLI edits something durable, a real 404 on remove, then logging.
+There's a requirements file in the repo: config-file routes, OAuth on certain paths, logging via Loki and Grafana, host-based rerouting, caching, a portfolio site. Every box is still unchecked, and the gaps are real. <b>Routes don't persist:</b> the initial <code>/wordsweave</code> route and the ACME contact email are hardcoded in <code>main.go</code>, and anything added through the CLI dies with the process. <b><code>remove</code> doesn't really 404:</b> because the <code>ServeMux</code> pattern can't be unregistered, removed paths fall through to a plaintext "Path not found" fallback that returns 200 (a wrong status code that happens to look fine in a browser). <b>The <code>ssl</code> package is dead code</b>, kept around as a candidate for a non-ACME deployment mode the running server has never needed. And the root handler at <code>/</code> is a stub for the portfolio site that doesn't exist yet.<span class="sn"><label class="sn-pill" for="reve-hello"></label><input class="sn-toggle" type="checkbox" id="reve-hello"><span class="sn-note">Specifically, it returns the five bytes <code>hello</code>. The portfolio has been "next up" since March 2025.</span></span> Next, in order: config-file-driven routes so the CLI edits something durable, a real 404 on remove, then logging.
 </p>
 
 <p>
-I went in to learn what <code>httputil</code> gives you for free, and it does give you a lot — the actual proxying is a one-liner per upstream. The surprise was that the missing pieces were more instructive than the free ones. <code>ServeMux</code> not having an unregister forced the request-time-lookup design, which ended up being the best thing in the codebase — it's what makes live URL swaps possible at all. And <code>autocert</code> went the other way: 397 of my most carefully tested lines, made redundant by six. Build it yourself first; just be ready for the standard library to win.
+I went in to learn what <code>httputil</code> gives you for free, and it does give you a lot; the actual proxying is a one-liner per upstream. The surprise was that the missing pieces were more instructive than the free ones. <code>ServeMux</code> not having an unregister forced the request-time-lookup design, which ended up being the best thing in the codebase. It's what makes live URL swaps possible at all. And <code>autocert</code> went the other way: 397 of my most carefully tested lines, made redundant by six. Build it yourself first; just be ready for the standard library to win.
 </p>
 
 <div class="colophon">

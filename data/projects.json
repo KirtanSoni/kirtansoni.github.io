@@ -57,7 +57,6 @@
     ],
     "desc": "A one-page résumé treated as a compiled artifact: content in JSON, a deterministic DOCX/PDF renderer, and a font-metric-calibrated line-utilization linter.",
     "links": {
-      "post": "posts/resume-that-compiles.html",
       "repo": "https://github.com/KirtanSoni/resume-docx"
     },
     "featured": true
@@ -115,7 +114,7 @@
       "Tokio",
       "Anthropic API"
     ],
-    "desc": "A Claude-Code-style agentic CLI harness in Rust, with Forge — a git-aware, AI-maintained context store. Dogfooded on itself. In progress.",
+    "desc": "A Claude-Code-style agentic CLI harness in Rust, with Forge: a git-aware, AI-maintained context store. Dogfooded on itself. In progress.",
     "links": {
       "post": "posts/forge-context-management.html",
       "repo": "https://github.com/KirtanSoni/anvil"
